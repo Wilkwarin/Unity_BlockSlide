@@ -13,6 +13,8 @@ public class BoardManager : MonoBehaviour
 
     public void CreateBoard(LevelData.BoardConfiguration config)
     {
+        Debug.Log($"=== CreateBoard вызван! Размер: {config.width}x{config.height} ===");
+
         grid = new CellType[config.width, config.height];
         cellObjects = new GameObject[config.width, config.height];
 
@@ -33,15 +35,20 @@ public class BoardManager : MonoBehaviour
                     if (sr != null)
                     {
                         sr.color = new Color(0.9f, 0.9f, 0.9f);
+                        Debug.Log($"Создана клетка ({x}, {y})");
                     }
                 }
             }
         }
 
+        Debug.Log($"=== Создано выходов: {config.exits.Length} ===");
+
         foreach (var exit in config.exits)
         {
             Vector3 pos = new Vector3(exit.position.x, exit.position.y, 0);
             GameObject exitObj = Instantiate(exitCellPrefab, pos, Quaternion.identity, boardParent);
+
+            Debug.Log($"Выход создан в ({exit.position.x}, {exit.position.y}), цвет: {exit.color}");
 
             SpriteRenderer sr = exitObj.GetComponent<SpriteRenderer>();
             if (sr != null)
