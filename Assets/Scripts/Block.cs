@@ -44,23 +44,6 @@ public class Block
         UpdateVisuals();
     }
 
-    public void SetVisualPosition(Vector3 worldPos)
-    {
-        Vector2Int previewPos = new Vector2Int(
-            Mathf.RoundToInt(worldPos.x),
-            Mathf.RoundToInt(worldPos.y)
-        );
-
-        for (int i = 0; i < shape.Length; i++)
-        {
-            cellObjects[i].transform.position = new Vector3(
-                previewPos.x + shape[i].x,
-                previewPos.y + shape[i].y,
-                -1
-            );
-        }
-    }
-
     public void UpdateVisuals()
     {
         for (int i = 0; i < shape.Length; i++)

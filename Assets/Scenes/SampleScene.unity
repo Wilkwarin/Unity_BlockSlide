@@ -443,7 +443,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 7
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -468,7 +468,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 2, y: 2, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1300,6 +1300,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BoardManager
   cellPrefab: {fileID: 8189793818261101157, guid: 02d7abd4cf593b4488050a5c17253257, type: 3}
   exitCellPrefab: {fileID: 8223013511089134128, guid: 69a1364ffa34c2e4497ba65a4b88197e, type: 3}
+  blockedCellPrefab: {fileID: 4032481687432595540, guid: 1b9943d6887944547a739a9125431278, type: 3}
   boardParent: {fileID: 1224943689}
 --- !u!4 &1194433533
 Transform:
@@ -1786,7 +1787,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e27f8ac3bfc3cf4ba1ddcf973da3015, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelManager
-  levels: []
+  levels:
+  - {fileID: 11400000, guid: 31a02f4703451434c941c23271ebfb17, type: 2}
   currentLevelIndex: 0
   gameController: {fileID: 298414471}
   boardManager: {fileID: 1194433532}

@@ -12,11 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c171ad614fc3224b897d9029316206d, type: 3}
   m_Name: Level_01
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
-  levelNumber: 0
-  levelName: Level 1
+  levelNumber: 1
+  levelName: Test Level 1
   board:
-    width: 0
-    height: 0
-    cells: 
-    exits: []
-  blocks: []
+    width: 5
+    height: 5
+    cells: 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    exits:
+    - position: {x: 2, y: 5}
+      color: 0
+    - position: {x: 5, y: 2}
+      color: 1
+  blocks:
+  - blockID: 0
+    color: 0
+    shape:
+    - {x: 0, y: 0}
+    - {x: 1, y: 0}
+    startPosition: {x: 1, y: 1}
+  - blockID: 1
+    color: 1
+    shape:
+    - {x: 0, y: 0}
+    - {x: 0, y: 1}
+    startPosition: {x: 3, y: 3}

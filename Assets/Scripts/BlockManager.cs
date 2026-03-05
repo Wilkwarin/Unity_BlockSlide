@@ -13,6 +13,7 @@ public class BlockManager : MonoBehaviour
     private Block selectedBlock = null;
     private Vector3 dragStartPos;
     private Vector2Int blockStartGridPos;
+    private Vector2Int lastValidGridPos;
     private bool isDragging = false;
 
     public void CreateBlocks(LevelData.BlockConfiguration[] configs)
@@ -35,10 +36,12 @@ public class BlockManager : MonoBehaviour
         Vector2 inputPosition = Vector2.zero;
         bool touchStarted = false;
         bool touchEnded = false;
+        bool isDragging_Active = false;
 
         if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
         {
             inputPosition = Touchscreen.current.primaryTouch.position.ReadValue();
+            isDragging_Active = true;
 
             if (Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
                 touchStarted = true;
@@ -52,6 +55,9 @@ public class BlockManager : MonoBehaviour
 
             if (Mouse.current.leftButton.wasPressedThisFrame)
                 touchStarted = true;
+
+            if (Mouse.current.leftButton.isPressed)
+                isDragging_Active = true;
 
             if (Mouse.current.leftButton.wasReleasedThisFrame)
                 touchEnded = true;
@@ -67,24 +73,54 @@ public class BlockManager : MonoBehaviour
                 selectedBlock = clickedBlock;
                 dragStartPos = worldPos;
                 blockStartGridPos = selectedBlock.position;
+                lastValidGridPos = selectedBlock.position;
                 isDragging = true;
                 selectedBlock.SetHighlight(true);
             }
         }
 
-        if (isDragging && selectedBlock != null)
+        if (isDragging && isDragging_Active && selectedBlock != null)
         {
             Vector3 worldPos = Camera.main.ScreenToWorldPoint(new Vector3(inputPosition.x, inputPosition.y, 0));
             Vector3 dragOffset = worldPos - dragStartPos;
 
-            Vector2Int newGridPos = new Vector2Int(
+            Vector2Int targetGridPos = new Vector2Int(
                 blockStartGridPos.x + Mathf.RoundToInt(dragOffset.x),
                 blockStartGridPos.y + Mathf.RoundToInt(dragOffset.y)
             );
 
-            if (CanMoveBlock(selectedBlock, newGridPos))
+            if (targetGridPos != selectedBlock.position)
             {
-                selectedBlock.SetVisualPosition(worldPos);
+                Vector2Int nextPos = GetNextStepTowards(selectedBlock.position, targetGridPos);
+
+                if (CanMoveBlock(selectedBlock, nextPos))
+                {
+                    selectedBlock.MoveTo(nextPos);
+                    lastValidGridPos = nextPos;
+                }
+            }
+        }
+
+        Vector2Int GetNextStepTowards(Vector2Int current, Vector2Int target)
+        {
+            Vector2Int direction = target - current;
+
+            int stepX = 0;
+            int stepY = 0;
+
+            if (direction.x > 0) stepX = 1;
+            else if (direction.x < 0) stepX = -1;
+
+            if (direction.y > 0) stepY = 1;
+            else if (direction.y < 0) stepY = -1;
+
+            if (Mathf.Abs(direction.x) >= Mathf.Abs(direction.y))
+            {
+                return new Vector2Int(current.x + stepX, current.y);
+            }
+            else
+            {
+                return new Vector2Int(current.x, current.y + stepY);
             }
         }
 
@@ -92,27 +128,11 @@ public class BlockManager : MonoBehaviour
         {
             if (selectedBlock != null)
             {
-                Vector3 worldPos = Camera.main.ScreenToWorldPoint(new Vector3(inputPosition.x, inputPosition.y, 0));
-                Vector3 dragOffset = worldPos - dragStartPos;
-
-                Vector2Int newGridPos = new Vector2Int(
-                    blockStartGridPos.x + Mathf.RoundToInt(dragOffset.x),
-                    blockStartGridPos.y + Mathf.RoundToInt(dragOffset.y)
-                );
-
-                if (CanMoveBlock(selectedBlock, newGridPos))
+                if (IsTouchingExit(selectedBlock))
                 {
-                    selectedBlock.MoveTo(newGridPos);
-
-                    if (IsTouchingExit(selectedBlock))
-                    {
-                        RemoveBlock(selectedBlock);
-                        gameController.CheckWinCondition();
-                    }
-                }
-                else
-                {
-                    selectedBlock.MoveTo(blockStartGridPos);
+                    Debug.Log($"Блок {selectedBlock.id} касается выхода! Удаляем.");
+                    RemoveBlock(selectedBlock);
+                    gameController.CheckWinCondition();
                 }
 
                 selectedBlock.SetHighlight(false);
