@@ -1,6 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+public enum ExitOrientation
+{
+    Horizontal,
+    Vertical
+}
+
 public class BoardManager : MonoBehaviour
 {
     public GameObject cellPrefab;
@@ -234,15 +240,36 @@ public class BoardManager : MonoBehaviour
         return false;
     }
 
+    public ExitOrientation GetExitOrientation(Vector2Int exitPos)
+    {
+        int width = grid.GetLength(0);
+        int height = grid.GetLength(1);
+
+        if (exitPos.y == -1 || exitPos.y == height)
+        {
+            return ExitOrientation.Horizontal;
+        }
+
+        if (exitPos.x == -1 || exitPos.x == width)
+        {
+            return ExitOrientation.Vertical;
+        }
+
+        return ExitOrientation.Horizontal;
+    }
+
     public void ClearBoard()
     {
-        foreach (var cell in cellObjects)
+        if (boardParent != null)
         {
-            if (cell != null)
-                Destroy(cell);
+            foreach (Transform child in boardParent)
+            {
+                Destroy(child.gameObject);
+            }
         }
 
         exitCells.Clear();
+        cellObjects = null;
     }
 
     Color GetColorFromEnum(BlockColor blockColor)

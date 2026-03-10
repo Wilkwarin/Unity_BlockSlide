@@ -30,7 +30,7 @@ public class Block
 
             cellObjects[i] = GameObject.Instantiate(cellPrefab, pos, Quaternion.identity, parent);
             spriteRenderers[i] = cellObjects[i].GetComponent<SpriteRenderer>();
-            
+
             if (spriteRenderers[i] != null)
             {
                 spriteRenderers[i].color = originalColor;
@@ -54,6 +54,42 @@ public class Block
                 0
             );
         }
+    }
+
+    public Vector2Int GetBoundingBoxSize()
+    {
+        if (shape == null || shape.Length == 0)
+            return Vector2Int.one;
+
+        Debug.Log($"=== GetBoundingBoxSize для блока {id} ===");
+        Debug.Log($"Shape содержит {shape.Length} элементов:");
+
+        for (int i = 0; i < shape.Length; i++)
+        {
+            Debug.Log($"  Element {i}: ({shape[i].x}, {shape[i].y})");
+        }
+
+        int minX = int.MaxValue;
+        int maxX = int.MinValue;
+        int minY = int.MaxValue;
+        int maxY = int.MinValue;
+
+        foreach (var offset in shape)
+        {
+            minX = Mathf.Min(minX, offset.x);
+            maxX = Mathf.Max(maxX, offset.x);
+            minY = Mathf.Min(minY, offset.y);
+            maxY = Mathf.Max(maxY, offset.y);
+        }
+
+        int width = maxX - minX + 1;
+        int height = maxY - minY + 1;
+
+        Debug.Log($"minX={minX}, maxX={maxX} → width={width}");
+        Debug.Log($"minY={minY}, maxY={maxY} → height={height}");
+        Debug.Log($"Итого: {width}×{height}");
+
+        return new Vector2Int(width, height);
     }
 
     public void SetHighlight(bool highlighted)

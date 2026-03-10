@@ -27,6 +27,7 @@ public class LevelData : ScriptableObject
     {
         public Vector2Int position;
         public BlockColor color;
+        public ExitOrientation orientation;
     }
 
     [System.Serializable]
