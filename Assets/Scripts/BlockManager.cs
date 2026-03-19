@@ -23,7 +23,7 @@ public class BlockManager : MonoBehaviour
             Block block = new Block();
             block.id = config.blockID;
             block.color = config.color;
-            block.shape = config.shape;
+            block.shape = BlockShapeLibrary.GetShapeByEnum(config.shape);
             block.position = config.startPosition;
             block.CreateVisuals(blockCellPrefab, blocksParent);
 
@@ -128,9 +128,10 @@ public class BlockManager : MonoBehaviour
         {
             if (selectedBlock != null)
             {
-                if (IsTouchingExit(selectedBlock))
+                if (IsTouchingExit(selectedBlock, out Vector2Int exitPos))
                 {
-                    Debug.Log($"Блок {selectedBlock.id} касается выхода! Удаляем.");
+                    Vector2 direction = GetExitDirection(exitPos);
+                    selectedBlock.AnimateExit(direction, this);
                     RemoveBlock(selectedBlock);
                     gameController.CheckWinCondition();
                 }
@@ -199,36 +200,9 @@ public class BlockManager : MonoBehaviour
         return false;
     }
 
-    /*
-        bool IsTouchingExit(Block block)
-        {
-            foreach (var offset in block.shape)
-            {
-                Vector2Int cellPos = block.position + offset;
-
-                Vector2Int[] neighbors = new Vector2Int[]
-                {
-                    cellPos + Vector2Int.up,
-                    cellPos + Vector2Int.down,
-                    cellPos + Vector2Int.left,
-                    cellPos + Vector2Int.right
-                };
-
-                foreach (var neighborPos in neighbors)
-                {
-                    if (boardManager.IsExitCell(neighborPos, block.color))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-        */
-
-    bool IsTouchingExit(Block block)
+    bool IsTouchingExit(Block block, out Vector2Int foundExitPos)
     {
+        foundExitPos = Vector2Int.zero;
         Vector2Int blockSize = block.GetBoundingBoxSize();
         Debug.Log($"Размер фигуры: ширина={blockSize.x}, высота={blockSize.y}");
 
@@ -246,26 +220,18 @@ public class BlockManager : MonoBehaviour
 
             foreach (var neighborPos in neighbors)
             {
-                // Проверяем, есть ли выход в соседней клетке
                 if (boardManager.IsExitCell(neighborPos, block.color))
                 {
-                    Debug.Log($"Найден выход цвета {block.color} в позиции ({neighborPos.x}, {neighborPos.y})");
-
-                    // НОВАЯ ПРОВЕРКА: Влезает ли фигура в размер выхода?
                     ExitOrientation exitOrientation = boardManager.GetExitOrientation(neighborPos);
-                    Debug.Log($"  Ориентация выхода: {exitOrientation}");
+                    int exitSize = boardManager.GetExitSize(neighborPos);
+                    Vector2Int exitStartPosition = boardManager.GetExitPosition(neighborPos);
 
-                    bool fitsInExit = CheckIfBlockFitsInExit(blockSize, exitOrientation);
-                    Debug.Log($"  Проверка влезания: {fitsInExit}");
+                    bool fitsInExit = CheckIfBlockFitsInExit(block, exitOrientation, exitSize, exitStartPosition);
 
                     if (fitsInExit)
                     {
-                        Debug.Log($"Фигура влезает в выход! Удаляем блок {block.id}");
+                        foundExitPos = neighborPos;
                         return true;
-                    }
-                    else
-                    {
-                        Debug.Log($"Фигура НЕ влезает (размер {blockSize.x}×{blockSize.y}, ориентация {exitOrientation})");
                     }
                 }
             }
@@ -275,32 +241,55 @@ public class BlockManager : MonoBehaviour
         return false;
     }
 
-    bool CheckIfBlockFitsInExit(Vector2Int blockSize, ExitOrientation exitOrientation)
+    Vector2 GetExitDirection(Vector2Int exitPos)
     {
-        Debug.Log($"    CheckIfBlockFitsInExit: размер блока ({blockSize.x}×{blockSize.y}), ориентация {exitOrientation}");
+        int width = boardManager.GetBoardWidth();
+        int height = boardManager.GetBoardHeight();
 
+        if (exitPos.y >= height) return Vector2.up;
+        if (exitPos.y < 0) return Vector2.down;
+        if (exitPos.x >= width) return Vector2.right;
+        if (exitPos.x < 0) return Vector2.left;
+
+        return Vector2.up; // fallback
+    }
+
+    bool CheckIfBlockFitsInExit(Block block, ExitOrientation exitOrientation, int exitSize, Vector2Int exitStartPosition)
+    {
         if (exitOrientation == ExitOrientation.Horizontal)
         {
-            // Горизонтальный выход (верх/низ) — проверяем ШИРИНУ
-            // Блок должен влезть по ширине (ширина ≤ 1)
-            bool fits = blockSize.x <= 1;
-            Debug.Log($"    Горизонтальный выход: ширина блока {blockSize.x} <= 1? {fits}");
-            return fits;
+            int exitMinX = exitStartPosition.x;
+            int exitMaxX = exitStartPosition.x + exitSize - 1;
+
+            foreach (var offset in block.shape)
+            {
+                int cellX = block.position.x + offset.x;
+                if (cellX < exitMinX || cellX > exitMaxX)
+                    return false;
+            }
+
+            return true;
         }
-        else // Vertical
+        else
         {
-            // Вертикальный выход (лево/право) — проверяем ВЫСОТУ
-            // Блок должен влезть по высоте (высота ≤ 1)
-            bool fits = blockSize.y <= 1;
-            Debug.Log($"    Вертикальный выход: высота блока {blockSize.y} <= 1? {fits}");
-            return fits;
+            int exitMinY = exitStartPosition.y;
+            int exitMaxY = exitStartPosition.y + exitSize - 1;
+
+            foreach (var offset in block.shape)
+            {
+                int cellY = block.position.y + offset.y;
+                if (cellY < exitMinY || cellY > exitMaxY)
+                    return false;
+            }
+
+            return true;
         }
     }
 
     public void RemoveBlock(Block block)
     {
         blocks.Remove(block);
-        block.Destroy();
+        // block.Destroy();
         Debug.Log($"Блок {block.id} удалён!");
     }
 

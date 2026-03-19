@@ -6,21 +6,42 @@ public class LevelManager : MonoBehaviour
     public LevelData[] levels;
     public int currentLevelIndex = 0;
 
+    [Header("Generation")]
+    public LevelGenerator levelGenerator;
+    public bool useGeneratorAfterHandmadeLevels = true;
+
     [Header("References")]
     public GameController gameController;
     public BoardManager boardManager;
     public BlockManager blockManager;
 
+    LevelData GetOrGenerateLevel(int levelIndex)
+    {
+        if (levelIndex < levels.Length)
+        {
+            return levels[levelIndex];
+        }
+
+        if (useGeneratorAfterHandmadeLevels && levelGenerator != null)
+        {
+            return levelGenerator.GenerateLevel();
+        }
+
+        return null;
+    }
+
     public void LoadLevel(int levelIndex)
     {
-        if (levelIndex < 0 || levelIndex >= levels.Length)
+        if (levelIndex < 0)
         {
-            Debug.LogError($"Уровень {levelIndex} не существует!");
             return;
         }
 
         currentLevelIndex = levelIndex;
-        LevelData level = levels[levelIndex];
+
+        LevelData level = GetOrGenerateLevel(levelIndex);
+        if (level == null)
+            return;
 
         boardManager.CreateBoard(level.board);
         blockManager.CreateBlocks(level.blocks);
@@ -37,16 +58,8 @@ public class LevelManager : MonoBehaviour
     public void NextLevel()
     {
         currentLevelIndex++;
-        
-        if (currentLevelIndex < levels.Length)
-        {
-            ClearLevel();
-            LoadLevel(currentLevelIndex);
-        }
-        else
-        {
-            Debug.Log("Все уровни пройдены!");
-        }
+        ClearLevel();
+        LoadLevel(currentLevelIndex);
     }
 
     public void RestartCurrentLevel()

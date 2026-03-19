@@ -87,10 +87,42 @@ public static class BlockShapeLibrary
         new Vector2Int(0, 0),
         new Vector2Int(1, 0),
         new Vector2Int(2, 0),
-        new Vector2Int(0, 1)
+        new Vector2Int(2, 1)
     };
 
     public static Vector2Int[] L4_90deg = new Vector2Int[]
+    {
+        new Vector2Int(0, 2),
+        new Vector2Int(1, 0),
+        new Vector2Int(1, 1),
+        new Vector2Int(1, 2)
+    };
+
+    public static Vector2Int[] L4_180deg = new Vector2Int[]
+    {
+        new Vector2Int(0, 0),
+        new Vector2Int(0, 1),
+        new Vector2Int(1, 1),
+        new Vector2Int(2, 1)
+    };
+
+    public static Vector2Int[] L4_270deg = new Vector2Int[]
+    {
+        new Vector2Int(0, 0),
+        new Vector2Int(0, 1),
+        new Vector2Int(0, 2),
+        new Vector2Int(1, 0)
+    };
+
+    public static Vector2Int[] L4_Mirror_0deg = new Vector2Int[]
+    {
+        new Vector2Int(0, 0),
+        new Vector2Int(0, 1),
+        new Vector2Int(1, 0),
+        new Vector2Int(2, 0)
+    };
+
+    public static Vector2Int[] L4_Mirror_90deg = new Vector2Int[]
     {
         new Vector2Int(0, 0),
         new Vector2Int(0, 1),
@@ -98,50 +130,18 @@ public static class BlockShapeLibrary
         new Vector2Int(1, 2)
     };
 
-    public static Vector2Int[] L4_180deg = new Vector2Int[]
-    {
-        new Vector2Int(0, 0),
-        new Vector2Int(1, 0),
-        new Vector2Int(2, 0),
-        new Vector2Int(2, 1)
-    };
-
-    public static Vector2Int[] L4_270deg = new Vector2Int[]
-    {
-        new Vector2Int(0, 0),
-        new Vector2Int(1, 0),
-        new Vector2Int(1, 1),
-        new Vector2Int(1, 2)
-    };
-
-    public static Vector2Int[] L4_Mirror_0deg = new Vector2Int[]
-    {
-        new Vector2Int(0, 0),
-        new Vector2Int(1, 0),
-        new Vector2Int(2, 0),
-        new Vector2Int(2, 1)
-    };
-
-    public static Vector2Int[] L4_Mirror_90deg = new Vector2Int[]
-    {
-        new Vector2Int(0, 0),
-        new Vector2Int(1, 0),
-        new Vector2Int(0, 1),
-        new Vector2Int(0, 2)
-    };
-
     public static Vector2Int[] L4_Mirror_180deg = new Vector2Int[]
     {
-        new Vector2Int(0, 0),
-        new Vector2Int(1, 0),
+        new Vector2Int(0, 1),
+        new Vector2Int(1, 1),
         new Vector2Int(2, 0),
-        new Vector2Int(0, 1)
+        new Vector2Int(2, 1)
     };
 
     public static Vector2Int[] L4_Mirror_270deg = new Vector2Int[]
     {
         new Vector2Int(0, 0),
-        new Vector2Int(1, 0),
+        new Vector2Int(0, 1),
         new Vector2Int(1, 1),
         new Vector2Int(1, 2)
     };
@@ -149,67 +149,35 @@ public static class BlockShapeLibrary
     // Z-образные
 
     public static Vector2Int[] Z_Horizontal = new Vector2Int[]
-    {
-        new Vector2Int(0, 0),
-        new Vector2Int(1, 0),
-        new Vector2Int(1, 1),
-        new Vector2Int(2, 1)
-    };
-
-    public static Vector2Int[] Z_Vertical = new Vector2Int[]
-    {
+{
         new Vector2Int(0, 0),
         new Vector2Int(0, 1),
         new Vector2Int(1, 1),
         new Vector2Int(1, 2)
-    };
+};
+
+    public static Vector2Int[] Z_Vertical = new Vector2Int[]
+        {
+        new Vector2Int(0, 1),
+        new Vector2Int(1, 0),
+        new Vector2Int(1, 1),
+        new Vector2Int(2, 0)
+        };
 
     public static Vector2Int[] Z_Mirror_Horizontal = new Vector2Int[]
     {
-        new Vector2Int(0, 0),
+        new Vector2Int(0, 1),
+        new Vector2Int(0, 2),
         new Vector2Int(1, 0),
-        new Vector2Int(1, 1),
-        new Vector2Int(2, 1)
+        new Vector2Int(1, 1)
     };
 
     public static Vector2Int[] Z_Mirror_Vertical = new Vector2Int[]
     {
         new Vector2Int(0, 0),
-        new Vector2Int(0, 1),
-        new Vector2Int(1, 1),
-        new Vector2Int(1, 2)
-    };
-
-    public static Vector2Int[] Z_0deg = new Vector2Int[]
-    {
-        new Vector2Int(0, 1),
-        new Vector2Int(1, 1),
         new Vector2Int(1, 0),
-        new Vector2Int(2, 0)
-    };
-
-    public static Vector2Int[] Z_90deg = new Vector2Int[]
-    {
-        new Vector2Int(1, 2),
         new Vector2Int(1, 1),
-        new Vector2Int(0, 1),
-        new Vector2Int(0, 0)
-    };
-
-    public static Vector2Int[] Z_180deg = new Vector2Int[]
-    {
-        new Vector2Int(1, 1),
-        new Vector2Int(2, 1),
-        new Vector2Int(0, 0),
-        new Vector2Int(1, 0)
-    };
-
-    public static Vector2Int[] Z_270deg = new Vector2Int[]
-    {
-        new Vector2Int(0, 2),
-        new Vector2Int(0, 1),
-        new Vector2Int(1, 1),
-        new Vector2Int(1, 0)
+        new Vector2Int(2, 1)
     };
 
     // Т-образные
@@ -260,45 +228,37 @@ public static class BlockShapeLibrary
     public static Vector2Int[] C_Right = new Vector2Int[]
     {
         new Vector2Int(0, 0),
+        new Vector2Int(0, 1),
         new Vector2Int(1, 0),
         new Vector2Int(2, 0),
-        new Vector2Int(0, 1),
-        new Vector2Int(0, 2),
-        new Vector2Int(1, 2),
-        new Vector2Int(2, 2)
+        new Vector2Int(2, 1)
     };
 
     public static Vector2Int[] C_Left = new Vector2Int[]
     {
         new Vector2Int(0, 0),
-        new Vector2Int(1, 0),
+        new Vector2Int(0, 1),
+        new Vector2Int(1, 1),
         new Vector2Int(2, 0),
-        new Vector2Int(2, 1),
-        new Vector2Int(0, 2),
-        new Vector2Int(1, 2),
-        new Vector2Int(2, 2)
+        new Vector2Int(2, 1)
     };
 
     public static Vector2Int[] C_Up = new Vector2Int[]
     {
         new Vector2Int(0, 0),
-        new Vector2Int(1, 0),
-        new Vector2Int(2, 0),
-        new Vector2Int(0, 1),
-        new Vector2Int(2, 1),
         new Vector2Int(0, 2),
-        new Vector2Int(2, 2)
+        new Vector2Int(1, 0),
+        new Vector2Int(1, 1),
+        new Vector2Int(1, 2)
     };
 
     public static Vector2Int[] C_Down = new Vector2Int[]
     {
         new Vector2Int(0, 0),
-        new Vector2Int(2, 0),
         new Vector2Int(0, 1),
-        new Vector2Int(2, 1),
         new Vector2Int(0, 2),
-        new Vector2Int(1, 2),
-        new Vector2Int(2, 2)
+        new Vector2Int(1, 0),
+        new Vector2Int(1, 2)
     };
 
     public static List<Vector2Int[]> GetShapesBySize(int blockCount)
@@ -337,10 +297,8 @@ public static class BlockShapeLibrary
                 shapes.Add(L4_Mirror_180deg);
                 shapes.Add(L4_Mirror_270deg);
                 // Z-образные
-                shapes.Add(Z_0deg);
-                shapes.Add(Z_90deg);
-                shapes.Add(Z_180deg);
-                shapes.Add(Z_270deg);
+                shapes.Add(Z_Horizontal);
+                shapes.Add(Z_Vertical);
                 shapes.Add(Z_Mirror_Horizontal);
                 shapes.Add(Z_Mirror_Vertical);
                 // Т-образные
@@ -382,5 +340,88 @@ public static class BlockShapeLibrary
         }
 
         return allShapes;
+    }
+
+    public static Vector2Int[] GetShapeByEnum(BlockShape shape)
+    {
+        switch (shape)
+        {
+            case BlockShape.Single: return Single;
+            case BlockShape.Stick_2x1: return Stick_2x1;
+            case BlockShape.Stick_1x2: return Stick_1x2;
+            case BlockShape.Stick_3x1: return Stick_3x1;
+            case BlockShape.Stick_1x3: return Stick_1x3;
+            case BlockShape.L_BottomLeft: return L_BottomLeft;
+            case BlockShape.L_BottomRight: return L_BottomRight;
+            case BlockShape.L_TopLeft: return L_TopLeft;
+            case BlockShape.L_TopRight: return L_TopRight;
+            case BlockShape.Square_2x2: return Square_2x2;
+            case BlockShape.L4_0deg: return L4_0deg;
+            case BlockShape.L4_90deg: return L4_90deg;
+            case BlockShape.L4_180deg: return L4_180deg;
+            case BlockShape.L4_270deg: return L4_270deg;
+            case BlockShape.L4_Mirror_0deg: return L4_Mirror_0deg;
+            case BlockShape.L4_Mirror_90deg: return L4_Mirror_90deg;
+            case BlockShape.L4_Mirror_180deg: return L4_Mirror_180deg;
+            case BlockShape.L4_Mirror_270deg: return L4_Mirror_270deg;
+            case BlockShape.Z_Horizontal: return Z_Horizontal;
+            case BlockShape.Z_Vertical: return Z_Vertical;
+            case BlockShape.Z_Mirror_Horizontal: return Z_Mirror_Horizontal;
+            case BlockShape.Z_Mirror_Vertical: return Z_Mirror_Vertical;
+            case BlockShape.T_0deg: return T_0deg;
+            case BlockShape.T_90deg: return T_90deg;
+            case BlockShape.T_180deg: return T_180deg;
+            case BlockShape.T_270deg: return T_270deg;
+            case BlockShape.Cross: return Cross;
+            default: return Single;
+        }
+    }
+
+    public static List<BlockShape> GetShapeEnumsBySize(int blockCount)
+    {
+        List<BlockShape> shapes = new List<BlockShape>();
+
+        switch (blockCount)
+        {
+            case 1:
+                shapes.Add(BlockShape.Single);
+                break;
+            case 2:
+                shapes.Add(BlockShape.Stick_2x1);
+                shapes.Add(BlockShape.Stick_1x2);
+                break;
+            case 3:
+                shapes.Add(BlockShape.Stick_3x1);
+                shapes.Add(BlockShape.Stick_1x3);
+                shapes.Add(BlockShape.L_BottomLeft);
+                shapes.Add(BlockShape.L_BottomRight);
+                shapes.Add(BlockShape.L_TopLeft);
+                shapes.Add(BlockShape.L_TopRight);
+                break;
+            case 4:
+                shapes.Add(BlockShape.Square_2x2);
+                shapes.Add(BlockShape.L4_0deg);
+                shapes.Add(BlockShape.L4_90deg);
+                shapes.Add(BlockShape.L4_180deg);
+                shapes.Add(BlockShape.L4_270deg);
+                shapes.Add(BlockShape.L4_Mirror_0deg);
+                shapes.Add(BlockShape.L4_Mirror_90deg);
+                shapes.Add(BlockShape.L4_Mirror_180deg);
+                shapes.Add(BlockShape.L4_Mirror_270deg);
+                shapes.Add(BlockShape.Z_Horizontal);
+                shapes.Add(BlockShape.Z_Vertical);
+                shapes.Add(BlockShape.Z_Mirror_Horizontal);
+                shapes.Add(BlockShape.Z_Mirror_Vertical);
+                shapes.Add(BlockShape.T_0deg);
+                shapes.Add(BlockShape.T_90deg);
+                shapes.Add(BlockShape.T_180deg);
+                shapes.Add(BlockShape.T_270deg);
+                break;
+            case 5:
+                shapes.Add(BlockShape.Cross);
+                break;
+        }
+
+        return shapes;
     }
 }

@@ -28,6 +28,7 @@ public class LevelData : ScriptableObject
         public Vector2Int position;
         public BlockColor color;
         public ExitOrientation orientation;
+        public int size = 1;
     }
 
     [System.Serializable]
@@ -35,7 +36,7 @@ public class LevelData : ScriptableObject
     {
         public int blockID;
         public BlockColor color;
-        public Vector2Int[] shape;
+        public BlockShape shape;
         public Vector2Int startPosition;
     }
 }
@@ -57,4 +58,39 @@ public enum BlockColor
     Purple,
     Cyan,
     Pink
+}
+
+public enum BlockShape
+{
+    Single,
+    Stick_2x1,
+    Stick_1x2,
+    Stick_3x1,
+    Stick_1x3,
+    L_BottomLeft,
+    L_BottomRight,
+    L_TopLeft,
+    L_TopRight,
+    Square_2x2,
+    L4_0deg,
+    L4_90deg,
+    L4_180deg,
+    L4_270deg,
+    L4_Mirror_0deg,
+    L4_Mirror_90deg,
+    L4_Mirror_180deg,
+    L4_Mirror_270deg,
+    Z_Horizontal,
+    Z_Vertical,
+    Z_Mirror_Horizontal,
+    Z_Mirror_Vertical,
+    T_0deg,
+    T_90deg,
+    T_180deg,
+    T_270deg,
+    Cross,
+    C_Right,
+    C_Left,
+    C_Up,
+    C_Down
 }

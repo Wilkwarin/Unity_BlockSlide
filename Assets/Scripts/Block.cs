@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class Block
 {
@@ -11,6 +12,14 @@ public class Block
     private SpriteRenderer[] spriteRenderers;
     private Color originalColor;
     private Color highlightColor;
+
+    class ParticleData
+    {
+        public GameObject obj;
+        public Vector3 startPos;
+        public Vector3 velocity;
+        public float size;
+    }
 
     public void CreateVisuals(GameObject cellPrefab, Transform parent)
     {
@@ -61,14 +70,6 @@ public class Block
         if (shape == null || shape.Length == 0)
             return Vector2Int.one;
 
-        Debug.Log($"=== GetBoundingBoxSize для блока {id} ===");
-        Debug.Log($"Shape содержит {shape.Length} элементов:");
-
-        for (int i = 0; i < shape.Length; i++)
-        {
-            Debug.Log($"  Element {i}: ({shape[i].x}, {shape[i].y})");
-        }
-
         int minX = int.MaxValue;
         int maxX = int.MinValue;
         int minY = int.MaxValue;
@@ -84,10 +85,6 @@ public class Block
 
         int width = maxX - minX + 1;
         int height = maxY - minY + 1;
-
-        Debug.Log($"minX={minX}, maxX={maxX} → width={width}");
-        Debug.Log($"minY={minY}, maxY={maxY} → height={height}");
-        Debug.Log($"Итого: {width}×{height}");
 
         return new Vector2Int(width, height);
     }
@@ -112,6 +109,153 @@ public class Block
             GameObject.Destroy(obj);
         }
     }
+
+    public void AnimateExit(Vector2 direction, MonoBehaviour runner)
+    {
+        runner.StartCoroutine(ExitAnimation(direction));
+    }
+
+    System.Collections.IEnumerator ExitAnimation(Vector2 direction)
+    {
+        foreach (var obj in cellObjects)
+        {
+            if (obj != null)
+                obj.SetActive(false);
+        }
+
+        int particlesPerCell = 6;
+        float duration = 0.5f;
+
+        List<ParticleData> particles = new List<ParticleData>();
+
+        foreach (var cellObj in cellObjects)
+        {
+            if (cellObj == null) continue;
+
+            Vector3 cellCenter = cellObj.transform.position + new Vector3(direction.x, direction.y, 0) * 1.25f;
+
+            for (int p = 0; p < particlesPerCell; p++)
+            {
+                GameObject particle = new GameObject($"Particle_{p}");
+                particle.transform.SetParent(cellObj.transform.parent);
+
+                SpriteRenderer psr = particle.AddComponent<SpriteRenderer>();
+
+                SpriteRenderer originalSr = cellObj.GetComponent<SpriteRenderer>();
+                if (originalSr != null)
+                {
+                    psr.sprite = originalSr.sprite;
+                    psr.color = originalSr.color;
+                    psr.sortingOrder = originalSr.sortingOrder + 1;
+                }
+
+                float size = UnityEngine.Random.Range(0.15f, 0.35f);
+                particle.transform.localScale = Vector3.one * size;
+                particle.transform.position = cellCenter;
+
+                Vector2 randomDir = UnityEngine.Random.insideUnitCircle.normalized;
+
+                Vector2 velocity2d = randomDir * UnityEngine.Random.Range(1.5f, 3f)
+                                   - direction * UnityEngine.Random.Range(0.5f, 1.2f);
+                                   
+                Vector3 velocity = new Vector3(velocity2d.x, velocity2d.y, 0);
+
+                particles.Add(new ParticleData
+                {
+                    obj = particle,
+                    startPos = cellCenter,
+                    velocity = velocity,
+                    size = size
+                });
+            }
+        }
+
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+
+            foreach (var p in particles)
+            {
+                if (p.obj == null) continue;
+
+                p.obj.transform.position = p.startPos + p.velocity * (t - t * t * 0.5f);
+
+                float fadeT = Mathf.Max(0f, (t - 0.4f) / 0.6f);
+                float currentSize = p.size * (1f - fadeT);
+                p.obj.transform.localScale = Vector3.one * currentSize;
+
+                SpriteRenderer psr = p.obj.GetComponent<SpriteRenderer>();
+                if (psr != null)
+                {
+                    Color c = psr.color;
+                    c.a = 1f - fadeT;
+                    psr.color = c;
+                }
+            }
+
+            yield return null;
+        }
+
+        foreach (var particle in particles)
+        {
+            if (particle.obj != null)
+                GameObject.Destroy(particle.obj);
+        }
+
+        foreach (var obj in cellObjects)
+        {
+            if (obj != null)
+                GameObject.Destroy(obj);
+        }
+    }
+
+    /*
+        System.Collections.IEnumerator ExitAnimation(Vector2 direction)
+        {
+            float duration = 0.35f;
+            float elapsed = 0f;
+
+            Vector3[] startPositions = new Vector3[cellObjects.Length];
+            for (int i = 0; i < cellObjects.Length; i++)
+            {
+                startPositions[i] = cellObjects[i].transform.position;
+            }
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+
+                float easedT = t * t;
+
+                for (int i = 0; i < cellObjects.Length; i++)
+                {
+                    if (cellObjects[i] == null) continue;
+
+                    cellObjects[i].transform.position = startPositions[i] +
+                        new Vector3(direction.x, direction.y, 0) * easedT * 1.5f;
+
+                    if (spriteRenderers[i] != null)
+                    {
+                        Color c = spriteRenderers[i].color;
+                        c.a = 1f - easedT;
+                        spriteRenderers[i].color = c;
+                    }
+                }
+
+                yield return null;
+            }
+
+            foreach (var obj in cellObjects)
+            {
+                if (obj != null)
+                    GameObject.Destroy(obj);
+            }
+        }
+    */
 
     Color GetColorFromEnum(BlockColor blockColor)
     {

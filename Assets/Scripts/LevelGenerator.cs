@@ -8,6 +8,8 @@ public class LevelGenerator : MonoBehaviour
     public int boardWidth = 6;
     public int boardHeight = 6;
     public int numberOfBlocks = 5;
+    public int minBlockSize = 1;
+    public int maxBlockSize = 3;
 
     [Header("References")]
     public LevelManager levelManager;
@@ -21,6 +23,38 @@ public class LevelGenerator : MonoBehaviour
         level.blocks = GenerateBlocks();
 
         return level;
+    }
+
+    List<Vector2Int> GetOccupiedCells(Vector2Int position, Vector2Int[] shape)
+    {
+        List<Vector2Int> cells = new List<Vector2Int>();
+        foreach (var offset in shape)
+        {
+            cells.Add(position + offset);
+        }
+        return cells;
+    }
+
+    bool IsWithinBoard(Vector2Int position, Vector2Int[] shape)
+    {
+        foreach (var offset in shape)
+        {
+            Vector2Int cell = position + offset;
+            if (cell.x < 0 || cell.x >= boardWidth || cell.y < 0 || cell.y >= boardHeight)
+                return false;
+        }
+        return true;
+    }
+
+    bool HasCollision(Vector2Int position, Vector2Int[] shape, HashSet<Vector2Int> occupiedCells)
+    {
+        foreach (var offset in shape)
+        {
+            Vector2Int cell = position + offset;
+            if (occupiedCells.Contains(cell))
+                return true;
+        }
+        return false;
     }
 
     LevelData.BoardConfiguration GenerateBoard()
@@ -46,28 +80,36 @@ public class LevelGenerator : MonoBehaviour
         exits.Add(new LevelData.ExitCellData
         {
             position = new Vector2Int(boardWidth / 2, boardHeight),
-            color = colors[0]
+            color = colors[0],
+            orientation = ExitOrientation.Horizontal,
+            size = 2
         });
 
         // Правая стенка
         exits.Add(new LevelData.ExitCellData
         {
             position = new Vector2Int(boardWidth, boardHeight / 2),
-            color = colors[1]
+            color = colors[1],
+            orientation = ExitOrientation.Vertical,
+            size = 2
         });
 
         // Нижняя стенка
         exits.Add(new LevelData.ExitCellData
         {
             position = new Vector2Int(boardWidth / 2, -1),
-            color = colors[2]
+            color = colors[2],
+            orientation = ExitOrientation.Horizontal,
+            size = 2
         });
 
         // Левая стенка
         exits.Add(new LevelData.ExitCellData
         {
             position = new Vector2Int(-1, boardHeight / 2),
-            color = colors[3]
+            color = colors[3],
+            orientation = ExitOrientation.Vertical,
+            size = 2
         });
 
         board.exits = exits.ToArray();
@@ -78,41 +120,58 @@ public class LevelGenerator : MonoBehaviour
     LevelData.BlockConfiguration[] GenerateBlocks()
     {
         List<LevelData.BlockConfiguration> blocks = new List<LevelData.BlockConfiguration>();
+        HashSet<Vector2Int> occupiedCells = new HashSet<Vector2Int>();
 
         BlockColor[] colors = new BlockColor[]
         {
-            BlockColor.Red, BlockColor.Blue, BlockColor.Green, BlockColor.Yellow
+        BlockColor.Red, BlockColor.Blue, BlockColor.Green, BlockColor.Yellow
         };
 
-        // Простые формы блоков
-        Vector2Int[][] shapes = new Vector2Int[][]
-        {
-            // Квадрат 2x2
-            new Vector2Int[] { new Vector2Int(0, 0), new Vector2Int(1, 0), new Vector2Int(0, 1), new Vector2Int(1, 1) },
-            
-            // Горизонтальная линия 3x1
-            new Vector2Int[] { new Vector2Int(0, 0), new Vector2Int(1, 0), new Vector2Int(2, 0) },
-            
-            // Вертикальная линия 1x3
-            new Vector2Int[] { new Vector2Int(0, 0), new Vector2Int(0, 1), new Vector2Int(0, 2) },
-            
-            // L-форма
-            new Vector2Int[] { new Vector2Int(0, 0), new Vector2Int(0, 1), new Vector2Int(1, 0) },
-        };
+        int maxAttempts = 100;
 
         for (int i = 0; i < numberOfBlocks; i++)
         {
-            LevelData.BlockConfiguration block = new LevelData.BlockConfiguration();
-            block.blockID = i;
-            block.color = colors[i % colors.Length];
-            block.shape = shapes[Random.Range(0, shapes.Length)];
-            
-            block.startPosition = new Vector2Int(
-                Random.Range(1, boardWidth - 2),
-                Random.Range(1, boardHeight - 2)
-            );
+            int blockSize = Random.Range(minBlockSize, maxBlockSize + 1);
+            List<BlockShape> shapesOfSize = BlockShapeLibrary.GetShapeEnumsBySize(blockSize);
+            BlockShape chosenShapeEnum = shapesOfSize[Random.Range(0, shapesOfSize.Count)];
+            Vector2Int[] shapeCoords = BlockShapeLibrary.GetShapeByEnum(chosenShapeEnum);
 
-            blocks.Add(block);
+            bool placed = false;
+
+            for (int attempt = 0; attempt < maxAttempts; attempt++)
+            {
+                Vector2Int candidate = new Vector2Int(
+                    Random.Range(0, boardWidth),
+                    Random.Range(0, boardHeight)
+                );
+
+                if (!IsWithinBoard(candidate, shapeCoords))
+                    continue;
+
+                if (HasCollision(candidate, shapeCoords, occupiedCells))
+                    continue;
+
+                LevelData.BlockConfiguration block = new LevelData.BlockConfiguration();
+                block.blockID = i;
+                block.color = colors[i % colors.Length];
+                block.shape = chosenShapeEnum;
+                block.startPosition = candidate;
+
+                blocks.Add(block);
+
+                foreach (var offset in shapeCoords)
+                {
+                    occupiedCells.Add(candidate + offset);
+                }
+
+                placed = true;
+                break;
+            }
+
+            if (!placed)
+            {
+                Debug.LogWarning($"Блок {i} не удалось разместить за {maxAttempts} попыток — пропускаем.");
+            }
         }
 
         return blocks.ToArray();

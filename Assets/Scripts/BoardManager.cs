@@ -16,7 +16,15 @@ public class BoardManager : MonoBehaviour
 
     private CellType[,] grid;
     private GameObject[,] cellObjects;
-    private Dictionary<Vector2Int, BlockColor> exitCells = new Dictionary<Vector2Int, BlockColor>();
+    private struct ExitData
+    {
+        public BlockColor color;
+        public ExitOrientation orientation;
+        public int size;
+        public Vector2Int startPosition;
+    }
+
+    private Dictionary<Vector2Int, ExitData> exitCells = new Dictionary<Vector2Int, ExitData>();
 
     public enum CornerType
     {
@@ -28,6 +36,14 @@ public class BoardManager : MonoBehaviour
 
     public void CreateBoard(LevelData.BoardConfiguration config)
     {
+        int expectedSize = config.width * config.height;
+        if (config.cells == null || config.cells.Length != expectedSize)
+        {
+            config.cells = new CellType[expectedSize];
+            for (int i = 0; i < expectedSize; i++)
+                config.cells[i] = CellType.Empty;
+        }
+
         grid = new CellType[config.width, config.height];
         cellObjects = new GameObject[config.width, config.height];
 
@@ -52,8 +68,6 @@ public class BoardManager : MonoBehaviour
                 }
             }
         }
-
-        Debug.Log($"=== Создано выходов: {config.exits.Length} ===");
 
         CreateBorder(config.width, config.height);
 
@@ -165,45 +179,66 @@ public class BoardManager : MonoBehaviour
 
     void CreateExit(LevelData.ExitCellData exit, int width, int height)
     {
-        Vector3 pos = new Vector3(exit.position.x, exit.position.y, 0);
-        GameObject exitObj = Instantiate(exitCellPrefab, pos, Quaternion.identity, boardParent);
-        exitObj.name = $"Exit_{exit.color}_{exit.position.x}_{exit.position.y}";
-
-        bool isHorizontal = (exit.position.y == -1 || exit.position.y == height);
-
-        if (isHorizontal)
+        // Регистрируем все клетки выхода в словаре
+        for (int i = 0; i < exit.size; i++)
         {
-            exitObj.transform.localScale = new Vector3(1f, 0.5f, 1f);
+            Vector2Int cellPos;
 
-            if (exit.position.y < 0)
+            if (exit.orientation == ExitOrientation.Horizontal)
             {
-                exitObj.transform.position = new Vector3(exit.position.x, -0.75f, 0);
+                cellPos = new Vector2Int(exit.position.x + i, exit.position.y);
             }
             else
             {
-                exitObj.transform.position = new Vector3(exit.position.x, height - 0.25f, 0);
+                cellPos = new Vector2Int(exit.position.x, exit.position.y + i);
             }
+
+            exitCells[cellPos] = new ExitData
+            {
+                color = exit.color,
+                orientation = exit.orientation,
+                size = exit.size,
+                startPosition = exit.position
+            };
+        }
+
+        // Создаём визуальный объект
+        GameObject exitObj = Instantiate(exitCellPrefab, Vector3.zero, Quaternion.identity, boardParent);
+        exitObj.name = $"Exit_{exit.color}_{exit.position.x}_{exit.position.y}";
+
+        if (exit.orientation == ExitOrientation.Horizontal)
+        {
+            // Верхняя или нижняя стенка
+            float centerX = exit.position.x + (exit.size - 1) / 2f;
+
+            exitObj.transform.localScale = new Vector3(exit.size, 0.5f, 1f);
+
+            if (exit.position.y < 0)
+                exitObj.transform.position = new Vector3(centerX, -0.75f, 0);
+            else
+                exitObj.transform.position = new Vector3(centerX, height - 0.25f, 0);
         }
         else
         {
-            exitObj.transform.localScale = new Vector3(0.5f, 1f, 1f);
+            // Левая или правая стенка
+            float centerY = exit.position.y + (exit.size - 1) / 2f;
+
+            exitObj.transform.localScale = new Vector3(0.5f, exit.size, 1f);
 
             if (exit.position.x < 0)
-            {
-                exitObj.transform.position = new Vector3(-0.75f, exit.position.y, 0);
-            }
+                exitObj.transform.position = new Vector3(-0.75f, centerY, 0);
             else
-            {
-                exitObj.transform.position = new Vector3(width - 0.25f, exit.position.y, 0);
-            }
+                exitObj.transform.position = new Vector3(width - 0.25f, centerY, 0);
         }
 
+        // Цвет рамки
         SpriteRenderer sr = exitObj.GetComponent<SpriteRenderer>();
         if (sr != null)
         {
             sr.color = Color.black;
         }
 
+        // Цвет внутреннего заполнения
         Transform inner = exitObj.transform.Find("Inner");
         if (inner != null)
         {
@@ -213,8 +248,6 @@ public class BoardManager : MonoBehaviour
                 innerSr.color = GetColorFromEnum(exit.color);
             }
         }
-
-        exitCells[exit.position] = exit.color;
     }
 
     public bool IsCellValid(Vector2Int pos)
@@ -231,28 +264,30 @@ public class BoardManager : MonoBehaviour
         return isValidType;
     }
 
+    public int GetBoardWidth()
+    {
+        return grid.GetLength(0);
+    }
+
+    public int GetBoardHeight()
+    {
+        return grid.GetLength(1);
+    }
+
     public bool IsExitCell(Vector2Int pos, BlockColor blockColor)
     {
         if (exitCells.ContainsKey(pos))
         {
-            return exitCells[pos] == blockColor;
+            return exitCells[pos].color == blockColor;
         }
         return false;
     }
 
     public ExitOrientation GetExitOrientation(Vector2Int exitPos)
     {
-        int width = grid.GetLength(0);
-        int height = grid.GetLength(1);
-
-        if (exitPos.y == -1 || exitPos.y == height)
+        if (exitCells.ContainsKey(exitPos))
         {
-            return ExitOrientation.Horizontal;
-        }
-
-        if (exitPos.x == -1 || exitPos.x == width)
-        {
-            return ExitOrientation.Vertical;
+            return exitCells[exitPos].orientation;
         }
 
         return ExitOrientation.Horizontal;
@@ -270,6 +305,22 @@ public class BoardManager : MonoBehaviour
 
         exitCells.Clear();
         cellObjects = null;
+    }
+
+    public int GetExitSize(Vector2Int exitPos)
+    {
+        if (exitCells.ContainsKey(exitPos))
+            return exitCells[exitPos].size;
+
+        return 1;
+    }
+
+    public Vector2Int GetExitPosition(Vector2Int exitPos)
+    {
+        if (exitCells.ContainsKey(exitPos))
+            return exitCells[exitPos].startPosition;
+
+        return exitPos;
     }
 
     Color GetColorFromEnum(BlockColor blockColor)
