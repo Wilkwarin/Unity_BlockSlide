@@ -146,7 +146,7 @@ RectTransform:
   m_GameObject: {fileID: 160075291}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 2, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1228540562}
@@ -393,6 +393,7 @@ GameObject:
   - component: {fileID: 330585545}
   - component: {fileID: 330585544}
   - component: {fileID: 330585547}
+  - component: {fileID: 330585548}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -518,6 +519,19 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &330585548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 330585543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be2ecbd6c4dbbc94eba6aba6031092b8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraController
+  padding: 0.75
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -1022,7 +1036,7 @@ RectTransform:
   m_GameObject: {fileID: 972470993}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.5, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1228540562}
@@ -1079,8 +1093,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 72
+  m_fontSizeBase: 72
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
@@ -1742,7 +1756,9 @@ MonoBehaviour:
   boardWidth: 6
   boardHeight: 6
   numberOfBlocks: 5
-  levelManager: {fileID: 0}
+  minBlockSize: 1
+  maxBlockSize: 3
+  levelManager: {fileID: 1632971840}
 --- !u!4 &1505045301
 Transform:
   m_ObjectHideFlags: 0
@@ -1789,10 +1805,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LevelManager
   levels:
   - {fileID: 11400000, guid: 31a02f4703451434c941c23271ebfb17, type: 2}
+  - {fileID: 11400000, guid: 020fadee6392aa44e9d245d1e2b5f47d, type: 2}
+  - {fileID: 11400000, guid: e32c4ad62a219b248a2d70d1e70620ae, type: 2}
+  - {fileID: 11400000, guid: ce6ffd9c62d0e2a42b6c09d5b744cb4a, type: 2}
+  - {fileID: 11400000, guid: 9c83f1ceec0e4644c9f21e1264b4780f, type: 2}
+  - {fileID: 11400000, guid: 0fe411305eb09054bb964fff6404ecf0, type: 2}
+  - {fileID: 11400000, guid: 0ed4267c6dbf88a42a18db5c2ca60783, type: 2}
+  - {fileID: 11400000, guid: fe39cbde920daa34eaec90fb6cec80b3, type: 2}
+  - {fileID: 11400000, guid: 8c3a8ed7b7d916d43b55be198071a566, type: 2}
+  - {fileID: 11400000, guid: 701c06ef3454c784094f03422f75108a, type: 2}
+  - {fileID: 11400000, guid: 5aac9ab3a54473b4c908b5c5ec9be54c, type: 2}
+  - {fileID: 11400000, guid: a85994f660b0b5a48a03958b3e45687b, type: 2}
+  - {fileID: 11400000, guid: e38167f7f4f68ac4f817ea3aba0757e6, type: 2}
+  - {fileID: 11400000, guid: 9cea8c1774779d946b3d991046a74940, type: 2}
+  - {fileID: 11400000, guid: bf102099a72a8bc4789d8fb9f13ab67d, type: 2}
+  - {fileID: 11400000, guid: 4392ed5e096233142b1753bd2967c7cd, type: 2}
+  - {fileID: 11400000, guid: b32d8638e3b422a44b4669ec8e7991d9, type: 2}
+  - {fileID: 11400000, guid: 422fd1d67da09714bba10c0993f7b2e5, type: 2}
   currentLevelIndex: 0
+  levelGenerator: {fileID: 1505045300}
+  useGeneratorAfterHandmadeLevels: 1
   gameController: {fileID: 298414471}
   boardManager: {fileID: 1194433532}
   blockManager: {fileID: 2110242018}
+  cameraController: {fileID: 330585548}
 --- !u!4 &1632971841
 Transform:
   m_ObjectHideFlags: 0

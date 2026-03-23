@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c171ad614fc3224b897d9029316206d, type: 3}
+  m_Name: Level_04
+  m_EditorClassIdentifier: Assembly-CSharp::LevelData
+  levelNumber: 4
+  levelName: Level 04
+  board:
+    width: 5
+    height: 6
+    cells: 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    exits:
+    - position: {x: 5, y: 1}
+      color: 3
+      orientation: 1
+      size: 2
+    - position: {x: 2, y: 6}
+      color: 5
+      orientation: 0
+      size: 3
+    - position: {x: -1, y: 0}
+      color: 2
+      orientation: 1
+      size: 3
+  blocks:
+  - blockID: 0
+    color: 3
+    shape: 28
+    startPosition: {x: 1, y: 2}
+  - blockID: 0
+    color: 5
+    shape: 24
+    startPosition: {x: 1, y: 1}
+  - blockID: 0
+    color: 2
+    shape: 20
+    startPosition: {x: 3, y: 3}

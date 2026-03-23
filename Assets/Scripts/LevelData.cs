@@ -28,13 +28,12 @@ public class LevelData : ScriptableObject
         public Vector2Int position;
         public BlockColor color;
         public ExitOrientation orientation;
-        public int size = 1;
+        public int size = 2;
     }
 
     [System.Serializable]
     public class BlockConfiguration
     {
-        public int blockID;
         public BlockColor color;
         public BlockShape shape;
         public Vector2Int startPosition;

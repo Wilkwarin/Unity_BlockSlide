@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 public class Block
 {
-    public int id;
     public BlockColor color;
     public Vector2Int[] shape;
     public Vector2Int position;
@@ -157,7 +156,7 @@ public class Block
 
                 Vector2 velocity2d = randomDir * UnityEngine.Random.Range(1.5f, 3f)
                                    - direction * UnityEngine.Random.Range(0.5f, 1.2f);
-                                   
+
                 Vector3 velocity = new Vector3(velocity2d.x, velocity2d.y, 0);
 
                 particles.Add(new ParticleData

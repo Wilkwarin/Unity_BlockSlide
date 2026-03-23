@@ -152,7 +152,6 @@ public class LevelGenerator : MonoBehaviour
                     continue;
 
                 LevelData.BlockConfiguration block = new LevelData.BlockConfiguration();
-                block.blockID = i;
                 block.color = colors[i % colors.Length];
                 block.shape = chosenShapeEnum;
                 block.startPosition = candidate;

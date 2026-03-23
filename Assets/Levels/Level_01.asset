@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Level_01
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
   levelNumber: 1
-  levelName: Test Level 1
+  levelName: Level 01
   board:
     width: 5
     height: 5
@@ -21,18 +21,18 @@ MonoBehaviour:
     exits:
     - position: {x: 2, y: 5}
       color: 0
+      orientation: 0
+      size: 2
     - position: {x: 5, y: 2}
       color: 1
+      orientation: 1
+      size: 2
   blocks:
   - blockID: 0
     color: 0
-    shape:
-    - {x: 0, y: 0}
-    - {x: 1, y: 0}
+    shape: 1
     startPosition: {x: 1, y: 1}
   - blockID: 1
     color: 1
-    shape:
-    - {x: 0, y: 0}
-    - {x: 0, y: 1}
+    shape: 2
     startPosition: {x: 3, y: 3}

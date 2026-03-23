@@ -373,6 +373,10 @@ public static class BlockShapeLibrary
             case BlockShape.T_180deg: return T_180deg;
             case BlockShape.T_270deg: return T_270deg;
             case BlockShape.Cross: return Cross;
+            case BlockShape.C_Right: return C_Right;
+            case BlockShape.C_Left: return C_Left;
+            case BlockShape.C_Up: return C_Up;
+            case BlockShape.C_Down: return C_Down;
             default: return Single;
         }
     }
@@ -419,6 +423,10 @@ public static class BlockShapeLibrary
                 break;
             case 5:
                 shapes.Add(BlockShape.Cross);
+                shapes.Add(BlockShape.C_Right);
+                shapes.Add(BlockShape.C_Left);
+                shapes.Add(BlockShape.C_Up);
+                shapes.Add(BlockShape.C_Down);
                 break;
         }
 

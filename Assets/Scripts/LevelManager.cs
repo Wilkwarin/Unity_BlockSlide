@@ -14,6 +14,7 @@ public class LevelManager : MonoBehaviour
     public GameController gameController;
     public BoardManager boardManager;
     public BlockManager blockManager;
+    public CameraController cameraController;
 
     LevelData GetOrGenerateLevel(int levelIndex)
     {
@@ -45,6 +46,9 @@ public class LevelManager : MonoBehaviour
 
         boardManager.CreateBoard(level.board);
         blockManager.CreateBlocks(level.blocks);
+
+        if (cameraController != null)
+            cameraController.FitToBoard(level.board.width, level.board.height);
 
         Debug.Log($"Загружен уровень {levelIndex + 1}");
     }

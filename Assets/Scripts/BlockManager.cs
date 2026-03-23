@@ -21,7 +21,6 @@ public class BlockManager : MonoBehaviour
         foreach (var config in configs)
         {
             Block block = new Block();
-            block.id = config.blockID;
             block.color = config.color;
             block.shape = BlockShapeLibrary.GetShapeByEnum(config.shape);
             block.position = config.startPosition;
@@ -237,7 +236,6 @@ public class BlockManager : MonoBehaviour
             }
         }
 
-        Debug.Log($"Подходящий выход не найден для блока {block.id}");
         return false;
     }
 
@@ -289,8 +287,6 @@ public class BlockManager : MonoBehaviour
     public void RemoveBlock(Block block)
     {
         blocks.Remove(block);
-        // block.Destroy();
-        Debug.Log($"Блок {block.id} удалён!");
     }
 
     public int GetRemainingBlocksCount()
