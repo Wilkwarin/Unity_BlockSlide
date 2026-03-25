@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
 
 public class LevelGenerator : MonoBehaviour
 {
@@ -8,171 +7,594 @@ public class LevelGenerator : MonoBehaviour
     public int boardWidth = 6;
     public int boardHeight = 6;
     public int numberOfBlocks = 5;
-    public int minBlockSize = 1;
-    public int maxBlockSize = 3;
 
     [Header("References")]
     public LevelManager levelManager;
+
+    struct ExitCandidate
+    {
+        public Vector2Int position;
+        public ExitOrientation orientation;
+        public int size;
+    }
+
+    enum Wall { Top, Bottom, Left, Right }
 
     public LevelData GenerateLevel()
     {
         LevelData level = ScriptableObject.CreateInstance<LevelData>();
         level.levelNumber = levelManager.currentLevelIndex + 1;
         level.levelName = $"Generated Level {level.levelNumber}";
-        level.board = GenerateBoard();
-        level.blocks = GenerateBlocks();
+
+        var (board, blocks) = GenerateBoardAndBlocks();
+        level.board = board;
+        level.blocks = blocks;
 
         return level;
     }
 
-    List<Vector2Int> GetOccupiedCells(Vector2Int position, Vector2Int[] shape)
-    {
-        List<Vector2Int> cells = new List<Vector2Int>();
-        foreach (var offset in shape)
-        {
-            cells.Add(position + offset);
-        }
-        return cells;
-    }
-
-    bool IsWithinBoard(Vector2Int position, Vector2Int[] shape)
-    {
-        foreach (var offset in shape)
-        {
-            Vector2Int cell = position + offset;
-            if (cell.x < 0 || cell.x >= boardWidth || cell.y < 0 || cell.y >= boardHeight)
-                return false;
-        }
-        return true;
-    }
-
-    bool HasCollision(Vector2Int position, Vector2Int[] shape, HashSet<Vector2Int> occupiedCells)
-    {
-        foreach (var offset in shape)
-        {
-            Vector2Int cell = position + offset;
-            if (occupiedCells.Contains(cell))
-                return true;
-        }
-        return false;
-    }
-
-    LevelData.BoardConfiguration GenerateBoard()
+    (LevelData.BoardConfiguration, LevelData.BlockConfiguration[]) GenerateBoardAndBlocks()
     {
         LevelData.BoardConfiguration board = new LevelData.BoardConfiguration();
         board.width = boardWidth;
         board.height = boardHeight;
         board.cells = new CellType[boardWidth * boardHeight];
-
         for (int i = 0; i < board.cells.Length; i++)
-        {
             board.cells[i] = CellType.Empty;
-        }
 
+        List<LevelData.BlockConfiguration> blocks = new List<LevelData.BlockConfiguration>();
         List<LevelData.ExitCellData> exits = new List<LevelData.ExitCellData>();
 
-        BlockColor[] colors = new BlockColor[]
-        {
-            BlockColor.Red, BlockColor.Blue, BlockColor.Green, BlockColor.Yellow
-        };
-
-        // Верхняя стенка
-        exits.Add(new LevelData.ExitCellData
-        {
-            position = new Vector2Int(boardWidth / 2, boardHeight),
-            color = colors[0],
-            orientation = ExitOrientation.Horizontal,
-            size = 2
-        });
-
-        // Правая стенка
-        exits.Add(new LevelData.ExitCellData
-        {
-            position = new Vector2Int(boardWidth, boardHeight / 2),
-            color = colors[1],
-            orientation = ExitOrientation.Vertical,
-            size = 2
-        });
-
-        // Нижняя стенка
-        exits.Add(new LevelData.ExitCellData
-        {
-            position = new Vector2Int(boardWidth / 2, -1),
-            color = colors[2],
-            orientation = ExitOrientation.Horizontal,
-            size = 2
-        });
-
-        // Левая стенка
-        exits.Add(new LevelData.ExitCellData
-        {
-            position = new Vector2Int(-1, boardHeight / 2),
-            color = colors[3],
-            orientation = ExitOrientation.Vertical,
-            size = 2
-        });
-
-        board.exits = exits.ToArray();
-
-        return board;
-    }
-
-    LevelData.BlockConfiguration[] GenerateBlocks()
-    {
-        List<LevelData.BlockConfiguration> blocks = new List<LevelData.BlockConfiguration>();
         HashSet<Vector2Int> occupiedCells = new HashSet<Vector2Int>();
+        HashSet<Vector2Int> occupiedExitCells = new HashSet<Vector2Int>();
 
-        BlockColor[] colors = new BlockColor[]
+        List<BlockColor> availableColors = new List<BlockColor>
         {
-        BlockColor.Red, BlockColor.Blue, BlockColor.Green, BlockColor.Yellow
+            BlockColor.Red, BlockColor.Blue, BlockColor.Green, BlockColor.Yellow,
+            BlockColor.Orange, BlockColor.Purple, BlockColor.Cyan, BlockColor.Pink
         };
 
-        int maxAttempts = 100;
+        List<BlockShape> unusedShapes = new List<BlockShape>(
+            (BlockShape[])System.Enum.GetValues(typeof(BlockShape))
+        );
 
-        for (int i = 0; i < numberOfBlocks; i++)
+        bool hasFiveBlockShape = false;
+
+        int totalCells = boardWidth * boardHeight;
+        int minFreeCells = totalCells / 4;
+
+        int failedAttempts = 0;
+        int maxFailedAttempts = 10;
+
+        while (true)
         {
-            int blockSize = Random.Range(minBlockSize, maxBlockSize + 1);
-            List<BlockShape> shapesOfSize = BlockShapeLibrary.GetShapeEnumsBySize(blockSize);
-            BlockShape chosenShapeEnum = shapesOfSize[Random.Range(0, shapesOfSize.Count)];
-            Vector2Int[] shapeCoords = BlockShapeLibrary.GetShapeByEnum(chosenShapeEnum);
+            int usedCells = occupiedCells.Count;
+            int freeCells = totalCells - usedCells;
 
-            bool placed = false;
-
-            for (int attempt = 0; attempt < maxAttempts; attempt++)
+            if (freeCells < minFreeCells)
+                break;
             {
-                Vector2Int candidate = new Vector2Int(
-                    Random.Range(0, boardWidth),
-                    Random.Range(0, boardHeight)
-                );
-
-                if (!IsWithinBoard(candidate, shapeCoords))
-                    continue;
-
-                if (HasCollision(candidate, shapeCoords, occupiedCells))
-                    continue;
-
-                LevelData.BlockConfiguration block = new LevelData.BlockConfiguration();
-                block.color = colors[i % colors.Length];
-                block.shape = chosenShapeEnum;
-                block.startPosition = candidate;
-
-                blocks.Add(block);
-
-                foreach (var offset in shapeCoords)
+                if (availableColors.Count == 0)
                 {
-                    occupiedCells.Add(candidate + offset);
+                    availableColors = new List<BlockColor>
+                {
+                    BlockColor.Red, BlockColor.Blue, BlockColor.Green, BlockColor.Yellow,
+                    BlockColor.Orange, BlockColor.Purple, BlockColor.Cyan, BlockColor.Pink
+                };
                 }
 
-                placed = true;
-                break;
-            }
+                int colorIndex = Random.Range(0, availableColors.Count);
+                BlockColor color = availableColors[colorIndex];
+                availableColors.RemoveAt(colorIndex);
 
-            if (!placed)
-            {
-                Debug.LogWarning($"Блок {i} не удалось разместить за {maxAttempts} попыток — пропускаем.");
+                List<Wall> walls = new List<Wall> { Wall.Top, Wall.Bottom, Wall.Left, Wall.Right };
+                ShuffleList(walls);
+
+                bool placed = false;
+
+                foreach (Wall wall in walls)
+                {
+                    BlockShape chosenShape;
+                    Vector2Int[] shapeCoords;
+
+                    if (!TryChooseShape(wall, hasFiveBlockShape, unusedShapes,
+                        out chosenShape, out shapeCoords))
+                        continue;
+
+                    int exitSize = GetExitSize(wall, shapeCoords);
+
+                    int maxAttempts = 50;
+                    bool wallPlaced = false;
+
+                    for (int attempt = 0; attempt < maxAttempts; attempt++)
+                    {
+                        ExitCandidate exit;
+                        if (!TryGetExitCandidate(wall, exitSize, occupiedExitCells, out exit))
+                            break;
+
+                        Vector2Int startPos = GetPositionAtExit(exit, shapeCoords);
+
+                        if (!IsWithinBoard(startPos, shapeCoords))
+                            continue;
+
+                        if (HasCollision(startPos, shapeCoords, occupiedCells))
+                            continue;
+
+                        Vector2Int finalPos = MoveIntoBoard(startPos, shapeCoords,
+                            wall, occupiedCells);
+
+                        LevelData.ExitCellData exitData = new LevelData.ExitCellData
+                        {
+                            position = exit.position,
+                            color = color,
+                            orientation = exit.orientation,
+                            size = exit.size
+                        };
+
+                        LevelData.BlockConfiguration block = new LevelData.BlockConfiguration
+                        {
+                            color = color,
+                            shape = chosenShape,
+                            startPosition = finalPos
+                        };
+
+                        foreach (var exitCell in GetExitCells(exit))
+                            occupiedExitCells.Add(exitCell);
+
+                        foreach (var offset in shapeCoords)
+                            occupiedCells.Add(finalPos + offset);
+
+                        exits.Add(exitData);
+                        blocks.Add(block);
+
+                        if (IsFiveBlockShape(chosenShape))
+                            hasFiveBlockShape = true;
+
+                        unusedShapes.Remove(chosenShape);
+
+                        ShuffleExistingBlocks(blocks, exits, occupiedCells);
+
+                        wallPlaced = true;
+                        placed = true;
+                        break;
+                    }
+
+                    if (wallPlaced)
+                        break;
+                }
+
+                if (!placed)
+                {
+                    availableColors.Add(color);
+                    failedAttempts++;
+                    if (failedAttempts >= maxFailedAttempts)
+                        break;
+                }
+                else
+                {
+                    failedAttempts = 0;
+                }
             }
         }
 
-        return blocks.ToArray();
+        board.exits = exits.ToArray();
+        return (board, blocks.ToArray());
+
+        bool TryChooseShape(Wall wall, bool hasFiveBlockShape,
+            List<BlockShape> unusedShapes,
+            out BlockShape chosenShape, out Vector2Int[] shapeCoords)
+        {
+            chosenShape = default;
+            shapeCoords = null;
+
+            List<BlockShape> allShapes = new List<BlockShape>(
+                (BlockShape[])System.Enum.GetValues(typeof(BlockShape))
+            );
+
+            if (hasFiveBlockShape)
+                allShapes.RemoveAll(s => IsFiveBlockShape(s));
+
+            allShapes.RemoveAll(s => !ShapeFitsOnWall(s, wall));
+
+            if (allShapes.Count == 0)
+                return false;
+
+            List<BlockShape> candidates = new List<BlockShape>();
+            foreach (var s in unusedShapes)
+            {
+                if (allShapes.Contains(s))
+                    candidates.Add(s);
+            }
+
+            if (candidates.Count == 0)
+                candidates = allShapes;
+
+            int index = Random.Range(0, candidates.Count);
+            chosenShape = candidates[index];
+            shapeCoords = BlockShapeLibrary.GetShapeByEnum(chosenShape);
+            return true;
+        }
+
+        bool ShapeFitsOnWall(BlockShape shape, Wall wall)
+        {
+            Vector2Int[] coords = BlockShapeLibrary.GetShapeByEnum(shape);
+            Vector2Int size = GetShapeSize(coords);
+
+            if (wall == Wall.Top || wall == Wall.Bottom)
+                return size.x <= boardWidth - 1;
+            else
+                return size.y <= boardHeight - 1;
+        }
+
+        int GetExitSize(Wall wall, Vector2Int[] shapeCoords)
+        {
+            Vector2Int size = GetShapeSize(shapeCoords);
+            if (wall == Wall.Top || wall == Wall.Bottom)
+                return size.x;
+            else
+                return size.y;
+        }
+
+        bool TryGetExitCandidate(Wall wall, int exitSize,
+            HashSet<Vector2Int> occupiedExitCells, out ExitCandidate exit)
+        {
+            exit = default;
+
+            List<Vector2Int> candidates = new List<Vector2Int>();
+
+            if (wall == Wall.Top)
+            {
+                for (int x = 0; x <= boardWidth - exitSize; x++)
+                {
+                    Vector2Int pos = new Vector2Int(x, boardHeight);
+                    if (!ExitOverlaps(pos, exitSize, true, occupiedExitCells))
+                        candidates.Add(pos);
+                }
+            }
+            else if (wall == Wall.Bottom)
+            {
+                for (int x = 0; x <= boardWidth - exitSize; x++)
+                {
+                    Vector2Int pos = new Vector2Int(x, -1);
+                    if (!ExitOverlaps(pos, exitSize, true, occupiedExitCells))
+                        candidates.Add(pos);
+                }
+            }
+            else if (wall == Wall.Right)
+            {
+                for (int y = 0; y <= boardHeight - exitSize; y++)
+                {
+                    Vector2Int pos = new Vector2Int(boardWidth, y);
+                    if (!ExitOverlaps(pos, exitSize, false, occupiedExitCells))
+                        candidates.Add(pos);
+                }
+            }
+            else
+            {
+                for (int y = 0; y <= boardHeight - exitSize; y++)
+                {
+                    Vector2Int pos = new Vector2Int(-1, y);
+                    if (!ExitOverlaps(pos, exitSize, false, occupiedExitCells))
+                        candidates.Add(pos);
+                }
+            }
+
+            if (candidates.Count == 0)
+                return false;
+
+            Vector2Int chosen = candidates[Random.Range(0, candidates.Count)];
+
+            exit = new ExitCandidate
+            {
+                position = chosen,
+                orientation = (wall == Wall.Top || wall == Wall.Bottom)
+                    ? ExitOrientation.Horizontal
+                    : ExitOrientation.Vertical,
+                size = exitSize
+            };
+
+            return true;
+        }
+
+        bool ExitOverlaps(Vector2Int pos, int size, bool horizontal,
+            HashSet<Vector2Int> occupiedExitCells)
+        {
+            for (int i = 0; i < size; i++)
+            {
+                Vector2Int cell = horizontal
+                    ? new Vector2Int(pos.x + i, pos.y)
+                    : new Vector2Int(pos.x, pos.y + i);
+
+                if (occupiedExitCells.Contains(cell))
+                    return true;
+            }
+            return false;
+        }
+
+        List<Vector2Int> GetExitCells(ExitCandidate exit)
+        {
+            List<Vector2Int> cells = new List<Vector2Int>();
+            bool horizontal = exit.orientation == ExitOrientation.Horizontal;
+
+            for (int i = 0; i < exit.size; i++)
+            {
+                cells.Add(horizontal
+                    ? new Vector2Int(exit.position.x + i, exit.position.y)
+                    : new Vector2Int(exit.position.x, exit.position.y + i));
+            }
+            return cells;
+        }
+
+        Vector2Int GetPositionAtExit(ExitCandidate exit, Vector2Int[] shapeCoords)
+        {
+            Vector2Int shapeSize = GetShapeSize(shapeCoords);
+            int minX = GetShapeMinX(shapeCoords);
+            int minY = GetShapeMinY(shapeCoords);
+
+            switch (GetWallFromExit(exit))
+            {
+                case Wall.Top:
+                    return new Vector2Int(
+                        exit.position.x - minX,
+                        boardHeight - 1 - (shapeSize.y - 1)
+                    );
+
+                case Wall.Bottom:
+                    return new Vector2Int(
+                        exit.position.x - minX,
+                        0 - minY
+                    );
+
+                case Wall.Right:
+                    return new Vector2Int(
+                        boardWidth - 1 - (shapeSize.x - 1),
+                        exit.position.y - minY
+                    );
+
+                default:
+                    return new Vector2Int(
+                        0 - minX,
+                        exit.position.y - minY
+                    );
+            }
+        }
+
+        Wall GetWallFromExit(ExitCandidate exit)
+        {
+            if (exit.position.y == boardHeight) return Wall.Top;
+            if (exit.position.y == -1) return Wall.Bottom;
+            if (exit.position.x == boardWidth) return Wall.Right;
+            return Wall.Left;
+        }
+
+        Wall GetWallFromExitData(LevelData.ExitCellData exit)
+        {
+            if (exit.position.y == boardHeight) return Wall.Top;
+            if (exit.position.y == -1) return Wall.Bottom;
+            if (exit.position.x == boardWidth) return Wall.Right;
+            return Wall.Left;
+        }
+
+        Vector2Int MoveIntoBoard(Vector2Int startPos, Vector2Int[] shapeCoords,
+            Wall wall, HashSet<Vector2Int> occupiedCells)
+        {
+            Vector2Int pos = startPos;
+            int totalSteps = 0;
+            int maxSteps = boardWidth * boardHeight;
+
+            Vector2Int inwardDir = GetInwardDirection(wall);
+
+            int mandatorySteps = Random.Range(2, 5);
+            for (int s = 0; s < mandatorySteps && totalSteps < maxSteps; s++)
+            {
+                Vector2Int next = pos + inwardDir;
+                if (IsWithinBoard(next, shapeCoords) &&
+                    !HasCollision(next, shapeCoords, occupiedCells))
+                {
+                    pos = next;
+                    totalSteps++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            int turns = Random.Range(3, 5);
+            Vector2Int currentDir = GetRandomPerpendicularDirection(inwardDir);
+
+            for (int turn = 0; turn < turns && totalSteps < maxSteps; turn++)
+            {
+                int maxStepsInDir = Random.Range(1, Mathf.Max(boardWidth, boardHeight));
+                int stepsInDir = 0;
+
+                while (stepsInDir < maxStepsInDir && totalSteps < maxSteps)
+                {
+                    Vector2Int next = pos + currentDir;
+                    if (IsWithinBoard(next, shapeCoords) &&
+                        !HasCollision(next, shapeCoords, occupiedCells))
+                    {
+                        pos = next;
+                        stepsInDir++;
+                        totalSteps++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                currentDir = GetRandomDirection(currentDir, -inwardDir);
+            }
+
+            return pos;
+        }
+
+        void ShuffleExistingBlocks(List<LevelData.BlockConfiguration> blocks,
+            List<LevelData.ExitCellData> exits,
+            HashSet<Vector2Int> occupiedCells)
+        {
+            // Перемешиваем порядок чтобы каждый раз разные фигуры двигались первыми
+            List<int> indices = new List<int>();
+            for (int i = 0; i < blocks.Count; i++)
+                indices.Add(i);
+            ShuffleList(indices);
+
+            foreach (int i in indices)
+            {
+                var block = blocks[i];
+                var exit = exits[i];
+                Vector2Int[] coords = BlockShapeLibrary.GetShapeByEnum(block.shape);
+
+                Wall wall = GetWallFromExitData(exit);
+                Vector2Int inwardDir = GetInwardDirection(wall);
+
+                // Временно убираем клетки этого блока из занятых
+                foreach (var offset in coords)
+                    occupiedCells.Remove(block.startPosition + offset);
+
+                // Пробуем переместить фигуру в случайном направлении
+                // но не в сторону выхода
+                Vector2Int pos = block.startPosition;
+                int maxSteps = boardWidth * boardHeight;
+                int totalSteps = 0;
+
+                // Выбираем случайное направление не к выходу
+                Vector2Int moveDir = GetRandomDirection(inwardDir, -inwardDir);
+
+                int stepsInDir = Random.Range(1, Mathf.Max(boardWidth, boardHeight));
+                int stepsTaken = 0;
+
+                while (stepsTaken < stepsInDir && totalSteps < maxSteps)
+                {
+                    Vector2Int next = pos + moveDir;
+                    if (IsWithinBoard(next, coords) &&
+                        !HasCollision(next, coords, occupiedCells))
+                    {
+                        pos = next;
+                        stepsTaken++;
+                        totalSteps++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                block.startPosition = pos;
+                blocks[i] = block;
+
+                // Возвращаем клетки на новой позиции
+                foreach (var offset in coords)
+                    occupiedCells.Add(pos + offset);
+            }
+        }
+
+        Vector2Int GetInwardDirection(Wall wall)
+        {
+            switch (wall)
+            {
+                case Wall.Top: return Vector2Int.down;
+                case Wall.Bottom: return Vector2Int.up;
+                case Wall.Right: return Vector2Int.left;
+                default: return Vector2Int.right;
+            }
+        }
+
+        Vector2Int GetRandomPerpendicularDirection(Vector2Int dir)
+        {
+            if (dir.x != 0)
+                return Random.value > 0.5f ? Vector2Int.up : Vector2Int.down;
+            else
+                return Random.value > 0.5f ? Vector2Int.left : Vector2Int.right;
+        }
+
+        Vector2Int GetRandomDirection(Vector2Int excludeDir, Vector2Int towardExit)
+        {
+            List<Vector2Int> dirs = new List<Vector2Int>
+        {
+            Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
+        };
+            dirs.Remove(excludeDir);
+            dirs.Remove(towardExit);
+
+            if (dirs.Count == 0)
+            {
+                dirs = new List<Vector2Int>
+            {
+                Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
+            };
+                dirs.Remove(excludeDir);
+            }
+
+            return dirs[Random.Range(0, dirs.Count)];
+        }
+
+        Vector2Int GetShapeSize(Vector2Int[] shape)
+        {
+            int minX = int.MaxValue, maxX = int.MinValue;
+            int minY = int.MaxValue, maxY = int.MinValue;
+            foreach (var v in shape)
+            {
+                if (v.x < minX) minX = v.x;
+                if (v.x > maxX) maxX = v.x;
+                if (v.y < minY) minY = v.y;
+                if (v.y > maxY) maxY = v.y;
+            }
+            return new Vector2Int(maxX - minX + 1, maxY - minY + 1);
+        }
+
+        int GetShapeMinX(Vector2Int[] shape)
+        {
+            int min = int.MaxValue;
+            foreach (var v in shape) if (v.x < min) min = v.x;
+            return min;
+        }
+
+        int GetShapeMinY(Vector2Int[] shape)
+        {
+            int min = int.MaxValue;
+            foreach (var v in shape) if (v.y < min) min = v.y;
+            return min;
+        }
+
+        bool IsFiveBlockShape(BlockShape shape)
+        {
+            return BlockShapeLibrary.GetShapeByEnum(shape).Length == 5;
+        }
+
+        bool IsWithinBoard(Vector2Int position, Vector2Int[] shape)
+        {
+            foreach (var offset in shape)
+            {
+                Vector2Int cell = position + offset;
+                if (cell.x < 0 || cell.x >= boardWidth ||
+                    cell.y < 0 || cell.y >= boardHeight)
+                    return false;
+            }
+            return true;
+        }
+
+        bool HasCollision(Vector2Int position, Vector2Int[] shape,
+            HashSet<Vector2Int> occupiedCells)
+        {
+            foreach (var offset in shape)
+            {
+                if (occupiedCells.Contains(position + offset))
+                    return true;
+            }
+            return false;
+        }
+
+        void ShuffleList<T>(List<T> list)
+        {
+            for (int i = list.Count - 1; i > 0; i--)
+            {
+                int j = Random.Range(0, i + 1);
+                T temp = list[i];
+                list[i] = list[j];
+                list[j] = temp;
+            }
+        }
     }
 }
