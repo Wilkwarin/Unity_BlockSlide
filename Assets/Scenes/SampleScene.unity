@@ -1756,8 +1756,6 @@ MonoBehaviour:
   boardWidth: 6
   boardHeight: 6
   numberOfBlocks: 5
-  minBlockSize: 1
-  maxBlockSize: 3
   levelManager: {fileID: 1632971840}
 --- !u!4 &1505045301
 Transform:
@@ -1811,17 +1809,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9c83f1ceec0e4644c9f21e1264b4780f, type: 2}
   - {fileID: 11400000, guid: 0fe411305eb09054bb964fff6404ecf0, type: 2}
   - {fileID: 11400000, guid: 0ed4267c6dbf88a42a18db5c2ca60783, type: 2}
-  - {fileID: 11400000, guid: fe39cbde920daa34eaec90fb6cec80b3, type: 2}
-  - {fileID: 11400000, guid: 8c3a8ed7b7d916d43b55be198071a566, type: 2}
-  - {fileID: 11400000, guid: 701c06ef3454c784094f03422f75108a, type: 2}
-  - {fileID: 11400000, guid: 5aac9ab3a54473b4c908b5c5ec9be54c, type: 2}
-  - {fileID: 11400000, guid: a85994f660b0b5a48a03958b3e45687b, type: 2}
-  - {fileID: 11400000, guid: e38167f7f4f68ac4f817ea3aba0757e6, type: 2}
-  - {fileID: 11400000, guid: 9cea8c1774779d946b3d991046a74940, type: 2}
-  - {fileID: 11400000, guid: bf102099a72a8bc4789d8fb9f13ab67d, type: 2}
-  - {fileID: 11400000, guid: 4392ed5e096233142b1753bd2967c7cd, type: 2}
-  - {fileID: 11400000, guid: b32d8638e3b422a44b4669ec8e7991d9, type: 2}
-  - {fileID: 11400000, guid: 422fd1d67da09714bba10c0993f7b2e5, type: 2}
   currentLevelIndex: 0
   levelGenerator: {fileID: 1505045300}
   useGeneratorAfterHandmadeLevels: 1

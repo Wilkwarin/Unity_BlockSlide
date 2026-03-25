@@ -203,7 +203,6 @@ public class BlockManager : MonoBehaviour
     {
         foundExitPos = Vector2Int.zero;
         Vector2Int blockSize = block.GetBoundingBoxSize();
-        Debug.Log($"Размер фигуры: ширина={blockSize.x}, высота={blockSize.y}");
 
         foreach (var offset in block.shape)
         {

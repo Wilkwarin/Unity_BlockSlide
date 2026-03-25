@@ -174,6 +174,9 @@ public class LevelGenerator : MonoBehaviour
                 {
                     availableColors.Add(color);
                     failedAttempts++;
+
+                    CompactBlocks(blocks, exits, occupiedCells);
+
                     if (failedAttempts >= maxFailedAttempts)
                         break;
                 }
@@ -182,6 +185,105 @@ public class LevelGenerator : MonoBehaviour
                     failedAttempts = 0;
                 }
             }
+        }
+
+        int targetOccupied = (totalCells * 3) / 4;
+        int maxFinalPasses = 10;
+
+        for (int pass = 0; pass < maxFinalPasses; pass++)
+        {
+            if (occupiedCells.Count >= targetOccupied)
+                break;
+
+            CompactBlocks(blocks, exits, occupiedCells);
+
+            bool addedBlock = false;
+
+            if (availableColors.Count == 0)
+            {
+                availableColors = new List<BlockColor>
+        {
+            BlockColor.Red, BlockColor.Blue, BlockColor.Green, BlockColor.Yellow,
+            BlockColor.Orange, BlockColor.Purple, BlockColor.Cyan, BlockColor.Pink,
+            BlockColor.White, BlockColor.Black, BlockColor.Scarlet, BlockColor.Brown
+        };
+            }
+
+            int colorIndex = Random.Range(0, availableColors.Count);
+            BlockColor color = availableColors[colorIndex];
+            availableColors.RemoveAt(colorIndex);
+
+            List<Wall> walls = new List<Wall> { Wall.Top, Wall.Bottom, Wall.Left, Wall.Right };
+            ShuffleList(walls);
+
+            foreach (Wall wall in walls)
+            {
+                BlockShape chosenShape;
+                Vector2Int[] shapeCoords;
+
+                if (!TryChooseShape(wall, hasFiveBlockShape, unusedShapes,
+                    out chosenShape, out shapeCoords))
+                    continue;
+
+                int exitSize = GetExitSize(wall, shapeCoords);
+                bool wallPlaced = false;
+
+                for (int attempt = 0; attempt < 50; attempt++)
+                {
+                    ExitCandidate exit;
+                    if (!TryGetExitCandidate(wall, exitSize, occupiedExitCells, out exit))
+                        break;
+
+                    Vector2Int startPos = GetPositionAtExit(exit, shapeCoords);
+
+                    if (!IsWithinBoard(startPos, shapeCoords))
+                        continue;
+
+                    if (HasCollision(startPos, shapeCoords, occupiedCells))
+                        continue;
+
+                    Vector2Int finalPos = MoveIntoBoard(startPos, shapeCoords, wall, occupiedCells);
+
+                    LevelData.ExitCellData exitData = new LevelData.ExitCellData
+                    {
+                        position = exit.position,
+                        color = color,
+                        orientation = exit.orientation,
+                        size = exit.size
+                    };
+
+                    LevelData.BlockConfiguration block = new LevelData.BlockConfiguration
+                    {
+                        color = color,
+                        shape = chosenShape,
+                        startPosition = finalPos
+                    };
+
+                    foreach (var exitCell in GetExitCells(exit))
+                        occupiedExitCells.Add(exitCell);
+
+                    foreach (var offset in shapeCoords)
+                        occupiedCells.Add(finalPos + offset);
+
+                    exits.Add(exitData);
+                    blocks.Add(block);
+
+                    if (IsFiveBlockShape(chosenShape))
+                        hasFiveBlockShape = true;
+
+                    unusedShapes.Remove(chosenShape);
+
+                    wallPlaced = true;
+                    addedBlock = true;
+                    break;
+                }
+
+                if (wallPlaced)
+                    break;
+            }
+
+            if (!addedBlock)
+                availableColors.Add(color);
         }
 
         board.exits = exits.ToArray();
@@ -495,6 +597,71 @@ public class LevelGenerator : MonoBehaviour
                 // Возвращаем клетки на новой позиции
                 foreach (var offset in coords)
                     occupiedCells.Add(pos + offset);
+            }
+        }
+
+        void CompactBlocks(List<LevelData.BlockConfiguration> blocks,
+            List<LevelData.ExitCellData> exits,
+            HashSet<Vector2Int> occupiedCells)
+        {
+            int passes = 3;
+
+            for (int pass = 0; pass < passes; pass++)
+            {
+                List<int> indices = new List<int>();
+                for (int i = 0; i < blocks.Count; i++)
+                    indices.Add(i);
+                ShuffleList(indices);
+
+                foreach (int i in indices)
+                {
+                    var block = blocks[i];
+                    var exit = exits[i];
+                    Vector2Int[] coords = BlockShapeLibrary.GetShapeByEnum(block.shape);
+
+                    Wall wall = GetWallFromExitData(exit);
+                    Vector2Int inwardDir = GetInwardDirection(wall);
+
+                    foreach (var offset in coords)
+                        occupiedCells.Remove(block.startPosition + offset);
+
+                    Vector2Int pos = block.startPosition;
+
+                    List<Vector2Int> dirs = new List<Vector2Int>
+            {
+                Vector2Int.up, Vector2Int.down,
+                Vector2Int.left, Vector2Int.right
+            };
+                    ShuffleList(dirs);
+
+                    Vector2Int towardExit = -inwardDir;
+                    dirs.Remove(towardExit);
+
+                    foreach (var dir in dirs)
+                    {
+                        Vector2Int bestPos = pos;
+                        Vector2Int tryPos = pos + dir;
+
+                        while (IsWithinBoard(tryPos, coords) &&
+                               !HasCollision(tryPos, coords, occupiedCells))
+                        {
+                            bestPos = tryPos;
+                            tryPos = tryPos + dir;
+                        }
+
+                        if (bestPos != pos)
+                        {
+                            pos = bestPos;
+                            break;
+                        }
+                    }
+
+                    block.startPosition = pos;
+                    blocks[i] = block;
+
+                    foreach (var offset in coords)
+                        occupiedCells.Add(pos + offset);
+                }
             }
         }
 
