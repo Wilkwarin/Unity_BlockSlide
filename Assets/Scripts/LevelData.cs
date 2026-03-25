@@ -56,7 +56,12 @@ public enum BlockColor
     Orange,
     Purple,
     Cyan,
-    Pink
+    Pink,
+    White,
+    Black,
+    Scarlet,
+    Brown,
+    Gray
 }
 
 public enum BlockShape

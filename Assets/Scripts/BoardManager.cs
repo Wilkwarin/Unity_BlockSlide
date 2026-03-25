@@ -335,7 +335,11 @@ public class BoardManager : MonoBehaviour
             case BlockColor.Purple: return new Color(0.502f, 0f, 1f);
             case BlockColor.Cyan: return new Color(0f, 1f, 1f);
             case BlockColor.Pink: return new Color(1f, 0f, 1f);
-            default: return Color.white;
+            case BlockColor.White: return new Color(1f, 1f, 0.075f);
+            case BlockColor.Black: return new Color(0f, 0f, 0f);
+            case BlockColor.Scarlet: return new Color(1f, 0.141f, 0f);
+            case BlockColor.Brown: return new Color(0.545f, 0.271f, 0.075f);
+            default: return new Color(0.5f, 0.5f, 0.5f);
         }
     }
 }

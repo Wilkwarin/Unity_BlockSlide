@@ -229,14 +229,47 @@ public class BlockManager : MonoBehaviour
 
                     if (fitsInExit)
                     {
-                        foundExitPos = neighborPos;
-                        return true;
+                        if (IsPathToExitClear(block, neighborPos, exitOrientation))
+                        {
+                            foundExitPos = neighborPos;
+                            return true;
+                        }
                     }
                 }
             }
         }
 
         return false;
+    }
+
+    bool IsPathToExitClear(Block block, Vector2Int exitPos, ExitOrientation exitOrientation)
+    {
+        Vector2Int toExit;
+
+        if (exitOrientation == ExitOrientation.Horizontal)
+        {
+            toExit = exitPos.y > block.position.y ? Vector2Int.up : Vector2Int.down;
+        }
+        else
+        {
+            toExit = exitPos.x > block.position.x ? Vector2Int.right : Vector2Int.left;
+        }
+
+        foreach (var offset in block.shape)
+        {
+            Vector2Int cellPos = block.position + offset;
+            Vector2Int check = cellPos + toExit;
+
+            while (boardManager.IsCellValid(check))
+            {
+                if (IsOccupiedByOtherBlock(check, block))
+                    return false;
+
+                check += toExit;
+            }
+        }
+
+        return true;
     }
 
     Vector2 GetExitDirection(Vector2Int exitPos)

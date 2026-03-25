@@ -36,9 +36,14 @@ public class LevelGenerator : MonoBehaviour
     (LevelData.BoardConfiguration, LevelData.BlockConfiguration[]) GenerateBoardAndBlocks()
     {
         LevelData.BoardConfiguration board = new LevelData.BoardConfiguration();
-        board.width = boardWidth;
-        board.height = boardHeight;
-        board.cells = new CellType[boardWidth * boardHeight];
+        int actualWidth = Random.Range(5, 9);
+        int actualHeight = Random.Range(6, 10);
+        boardWidth = actualWidth;
+        boardHeight = actualHeight;
+        board.width = actualWidth;
+        board.height = actualHeight;
+        board.cells = new CellType[actualWidth * actualHeight];
+
         for (int i = 0; i < board.cells.Length; i++)
             board.cells[i] = CellType.Empty;
 
@@ -51,7 +56,8 @@ public class LevelGenerator : MonoBehaviour
         List<BlockColor> availableColors = new List<BlockColor>
         {
             BlockColor.Red, BlockColor.Blue, BlockColor.Green, BlockColor.Yellow,
-            BlockColor.Orange, BlockColor.Purple, BlockColor.Cyan, BlockColor.Pink
+            BlockColor.Orange, BlockColor.Purple, BlockColor.Cyan, BlockColor.Pink,
+            BlockColor.White, BlockColor.Black, BlockColor.Scarlet, BlockColor.Brown
         };
 
         List<BlockShape> unusedShapes = new List<BlockShape>(
@@ -79,7 +85,8 @@ public class LevelGenerator : MonoBehaviour
                     availableColors = new List<BlockColor>
                 {
                     BlockColor.Red, BlockColor.Blue, BlockColor.Green, BlockColor.Yellow,
-                    BlockColor.Orange, BlockColor.Purple, BlockColor.Cyan, BlockColor.Pink
+                    BlockColor.Orange, BlockColor.Purple, BlockColor.Cyan, BlockColor.Pink,
+                    BlockColor.White, BlockColor.Black, BlockColor.Scarlet, BlockColor.Brown
                 };
                 }
 
@@ -178,6 +185,7 @@ public class LevelGenerator : MonoBehaviour
         }
 
         board.exits = exits.ToArray();
+        PushBlocksAwayFromExits(blocks, exits, occupiedCells);
         return (board, blocks.ToArray());
 
         bool TryChooseShape(Wall wall, bool hasFiveBlockShape,
@@ -487,6 +495,108 @@ public class LevelGenerator : MonoBehaviour
                 // Возвращаем клетки на новой позиции
                 foreach (var offset in coords)
                     occupiedCells.Add(pos + offset);
+            }
+        }
+
+        void PushBlocksAwayFromExits(List<LevelData.BlockConfiguration> blocks,
+    List<LevelData.ExitCellData> exits,
+    HashSet<Vector2Int> occupiedCells)
+        {
+            int passes = 5;
+
+            for (int pass = 0; pass < passes; pass++)
+            {
+                List<int> indices = new List<int>();
+                for (int i = 0; i < blocks.Count; i++)
+                    indices.Add(i);
+                ShuffleList(indices);
+
+                foreach (int i in indices)
+                {
+                    var block = blocks[i];
+                    var exit = exits[i];
+                    Vector2Int[] coords = BlockShapeLibrary.GetShapeByEnum(block.shape);
+
+                    Wall wall = GetWallFromExitData(exit);
+                    Vector2Int inwardDir = GetInwardDirection(wall);
+                    Vector2Int perpDir = GetRandomPerpendicularDirection(inwardDir);
+
+                    // Временно убираем клетки этого блока
+                    foreach (var offset in coords)
+                        occupiedCells.Remove(block.startPosition + offset);
+
+                    Vector2Int pos = block.startPosition;
+                    int totalSteps = 0;
+                    int maxSteps = boardWidth * boardHeight;
+
+                    // Несколько попыток обхода препятствий
+                    int maneuvers = 4;
+
+                    for (int maneuver = 0; maneuver < maneuvers && totalSteps < maxSteps; maneuver++)
+                    {
+                        // Шаг 1 — идём вглубь пока можем
+                        bool movedInward = false;
+                        for (int step = 0; step < maxSteps && totalSteps < maxSteps; step++)
+                        {
+                            Vector2Int next = pos + inwardDir;
+                            if (IsWithinBoard(next, coords) &&
+                                !HasCollision(next, coords, occupiedCells))
+                            {
+                                pos = next;
+                                totalSteps++;
+                                movedInward = true;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+
+                        // Шаг 2 — упёрлись, пробуем сдвинуться в сторону
+                        // Пробуем обе перпендикулярных стороны в случайном порядке
+                        List<Vector2Int> perpDirs = new List<Vector2Int>
+                {
+                    GetRandomPerpendicularDirection(inwardDir),
+                };
+                        // Добавляем противоположное перпендикулярное направление
+                        Vector2Int firstPerp = perpDirs[0];
+                        perpDirs.Add(new Vector2Int(-firstPerp.x, -firstPerp.y));
+
+                        bool movedSideways = false;
+                        foreach (var pd in perpDirs)
+                        {
+                            int sidewaysSteps = Random.Range(1, Mathf.Max(boardWidth, boardHeight));
+                            for (int step = 0; step < sidewaysSteps && totalSteps < maxSteps; step++)
+                            {
+                                Vector2Int next = pos + pd;
+                                if (IsWithinBoard(next, coords) &&
+                                    !HasCollision(next, coords, occupiedCells))
+                                {
+                                    pos = next;
+                                    totalSteps++;
+                                    movedSideways = true;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+
+                            if (movedSideways)
+                                break;
+                        }
+
+                        // Если не смогли двигаться ни вглубь ни в сторону — фигура заперта
+                        if (!movedInward && !movedSideways)
+                            break;
+                    }
+
+                    block.startPosition = pos;
+                    blocks[i] = block;
+
+                    foreach (var offset in coords)
+                        occupiedCells.Add(pos + offset);
+                }
             }
         }
 
