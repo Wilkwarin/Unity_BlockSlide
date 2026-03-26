@@ -211,51 +211,6 @@ public class Block
         }
     }
 
-    /*
-        System.Collections.IEnumerator ExitAnimation(Vector2 direction)
-        {
-            float duration = 0.35f;
-            float elapsed = 0f;
-
-            Vector3[] startPositions = new Vector3[cellObjects.Length];
-            for (int i = 0; i < cellObjects.Length; i++)
-            {
-                startPositions[i] = cellObjects[i].transform.position;
-            }
-
-            while (elapsed < duration)
-            {
-                elapsed += Time.deltaTime;
-                float t = elapsed / duration;
-
-                float easedT = t * t;
-
-                for (int i = 0; i < cellObjects.Length; i++)
-                {
-                    if (cellObjects[i] == null) continue;
-
-                    cellObjects[i].transform.position = startPositions[i] +
-                        new Vector3(direction.x, direction.y, 0) * easedT * 1.5f;
-
-                    if (spriteRenderers[i] != null)
-                    {
-                        Color c = spriteRenderers[i].color;
-                        c.a = 1f - easedT;
-                        spriteRenderers[i].color = c;
-                    }
-                }
-
-                yield return null;
-            }
-
-            foreach (var obj in cellObjects)
-            {
-                if (obj != null)
-                    GameObject.Destroy(obj);
-            }
-        }
-    */
-
     Color GetColorFromEnum(BlockColor blockColor)
     {
         switch (blockColor)
@@ -268,7 +223,7 @@ public class Block
             case BlockColor.Purple: return new Color(0.502f, 0f, 1f);
             case BlockColor.Cyan: return new Color(0f, 1f, 1f);
             case BlockColor.Pink: return new Color(1f, 0f, 1f);
-            case BlockColor.White: return new Color(1f, 1f, 0.075f);
+            case BlockColor.DarkTeal: return new Color(0f, 0.5f, 0.5f);
             case BlockColor.Black: return new Color(0f, 0f, 0f);
             case BlockColor.Scarlet: return new Color(1f, 0.141f, 0f);
             case BlockColor.Brown: return new Color(0.545f, 0.271f, 0.075f);

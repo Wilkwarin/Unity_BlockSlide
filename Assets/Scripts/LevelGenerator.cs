@@ -36,8 +36,8 @@ public class LevelGenerator : MonoBehaviour
     (LevelData.BoardConfiguration, LevelData.BlockConfiguration[]) GenerateBoardAndBlocks()
     {
         LevelData.BoardConfiguration board = new LevelData.BoardConfiguration();
-        int actualWidth = Random.Range(5, 9);
-        int actualHeight = Random.Range(6, 10);
+        int actualWidth = Random.Range(6, 9);
+        int actualHeight = Random.Range(7, 10);
         boardWidth = actualWidth;
         boardHeight = actualHeight;
         board.width = actualWidth;
@@ -57,7 +57,7 @@ public class LevelGenerator : MonoBehaviour
         {
             BlockColor.Red, BlockColor.Blue, BlockColor.Green, BlockColor.Yellow,
             BlockColor.Orange, BlockColor.Purple, BlockColor.Cyan, BlockColor.Pink,
-            BlockColor.White, BlockColor.Black, BlockColor.Scarlet, BlockColor.Brown
+            BlockColor.DarkTeal, BlockColor.Black, BlockColor.Scarlet, BlockColor.Brown
         };
 
         List<BlockShape> unusedShapes = new List<BlockShape>(
@@ -71,6 +71,9 @@ public class LevelGenerator : MonoBehaviour
 
         int failedAttempts = 0;
         int maxFailedAttempts = 10;
+
+        Dictionary<BlockColor, LevelData.ExitCellData> existingExitByColor = 
+    new Dictionary<BlockColor, LevelData.ExitCellData>();
 
         while (true)
         {
@@ -86,7 +89,7 @@ public class LevelGenerator : MonoBehaviour
                 {
                     BlockColor.Red, BlockColor.Blue, BlockColor.Green, BlockColor.Yellow,
                     BlockColor.Orange, BlockColor.Purple, BlockColor.Cyan, BlockColor.Pink,
-                    BlockColor.White, BlockColor.Black, BlockColor.Scarlet, BlockColor.Brown
+                    BlockColor.DarkTeal, BlockColor.Black, BlockColor.Scarlet, BlockColor.Brown
                 };
                 }
 
@@ -205,7 +208,7 @@ public class LevelGenerator : MonoBehaviour
         {
             BlockColor.Red, BlockColor.Blue, BlockColor.Green, BlockColor.Yellow,
             BlockColor.Orange, BlockColor.Purple, BlockColor.Cyan, BlockColor.Pink,
-            BlockColor.White, BlockColor.Black, BlockColor.Scarlet, BlockColor.Brown
+            BlockColor.DarkTeal, BlockColor.Black, BlockColor.Scarlet, BlockColor.Brown
         };
             }
 

@@ -57,7 +57,7 @@ public enum BlockColor
     Purple,
     Cyan,
     Pink,
-    White,
+    DarkTeal,
     Black,
     Scarlet,
     Brown,

@@ -179,7 +179,6 @@ public class BoardManager : MonoBehaviour
 
     void CreateExit(LevelData.ExitCellData exit, int width, int height)
     {
-        // Регистрируем все клетки выхода в словаре
         for (int i = 0; i < exit.size; i++)
         {
             Vector2Int cellPos;
@@ -202,51 +201,41 @@ public class BoardManager : MonoBehaviour
             };
         }
 
-        // Создаём визуальный объект
         GameObject exitObj = Instantiate(exitCellPrefab, Vector3.zero, Quaternion.identity, boardParent);
         exitObj.name = $"Exit_{exit.color}_{exit.position.x}_{exit.position.y}";
 
+        SpriteRenderer mainSr = exitObj.GetComponent<SpriteRenderer>();
+        Transform innerTransform = exitObj.transform.Find("Inner");
+        SpriteRenderer innerSr = innerTransform != null ? innerTransform.GetComponent<SpriteRenderer>() : null;
+
+        exitObj.transform.localScale = Vector3.one;
+        if (innerTransform != null) innerTransform.localScale = Vector3.one;
+
         if (exit.orientation == ExitOrientation.Horizontal)
         {
-            // Верхняя или нижняя стенка
             float centerX = exit.position.x + (exit.size - 1) / 2f;
+            float yPos = (exit.position.y < 0) ? -0.75f : height - 0.25f;
+            exitObj.transform.position = new Vector3(centerX, yPos, 0);
 
-            exitObj.transform.localScale = new Vector3(exit.size, 0.5f, 1f);
-
-            if (exit.position.y < 0)
-                exitObj.transform.position = new Vector3(centerX, -0.75f, 0);
-            else
-                exitObj.transform.position = new Vector3(centerX, height - 0.25f, 0);
+            if (mainSr != null) mainSr.size = new Vector2(exit.size, 0.5f);
+            if (innerSr != null) innerSr.size = new Vector2(exit.size - 0.2f, 0.3f); // потоньше - new Vector2(exit.size - 0.14f, 0.36f);
         }
         else
         {
-            // Левая или правая стенка
             float centerY = exit.position.y + (exit.size - 1) / 2f;
+            float xPos = (exit.position.x < 0) ? -0.75f : width - 0.25f;
+            exitObj.transform.position = new Vector3(xPos, centerY, 0);
 
-            exitObj.transform.localScale = new Vector3(0.5f, exit.size, 1f);
-
-            if (exit.position.x < 0)
-                exitObj.transform.position = new Vector3(-0.75f, centerY, 0);
-            else
-                exitObj.transform.position = new Vector3(width - 0.25f, centerY, 0);
+            if (mainSr != null) mainSr.size = new Vector2(0.5f, exit.size);
+            if (innerSr != null) innerSr.size = new Vector2(0.3f, exit.size - 0.2f); // потоньше - new Vector2(0.36f, exit.size - 0.14f);
         }
 
-        // Цвет рамки
-        SpriteRenderer sr = exitObj.GetComponent<SpriteRenderer>();
-        if (sr != null)
-        {
-            sr.color = Color.black;
-        }
+        if (mainSr != null) mainSr.color = Color.black;
 
-        // Цвет внутреннего заполнения
-        Transform inner = exitObj.transform.Find("Inner");
-        if (inner != null)
+        if (innerSr != null)
         {
-            SpriteRenderer innerSr = inner.GetComponent<SpriteRenderer>();
-            if (innerSr != null)
-            {
-                innerSr.color = GetColorFromEnum(exit.color);
-            }
+            innerSr.color = GetColorFromEnum(exit.color);
+
         }
     }
 
@@ -335,7 +324,7 @@ public class BoardManager : MonoBehaviour
             case BlockColor.Purple: return new Color(0.502f, 0f, 1f);
             case BlockColor.Cyan: return new Color(0f, 1f, 1f);
             case BlockColor.Pink: return new Color(1f, 0f, 1f);
-            case BlockColor.White: return new Color(1f, 1f, 0.075f);
+            case BlockColor.DarkTeal: return new Color(0f, 0.5f, 0.5f);
             case BlockColor.Black: return new Color(0f, 0f, 0f);
             case BlockColor.Scarlet: return new Color(1f, 0.141f, 0f);
             case BlockColor.Brown: return new Color(0.545f, 0.271f, 0.075f);
