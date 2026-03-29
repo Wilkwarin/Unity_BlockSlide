@@ -51,6 +51,9 @@ public class GameController : MonoBehaviour
 
         if (winText != null)
             winText.SetActive(false);
+
+        if (menuManager != null)
+            menuManager.RefreshLevelDisplay();
     }
 
     public void CheckWinCondition()
@@ -123,13 +126,13 @@ public class GameController : MonoBehaviour
         levelCompleted = false;
         isBusy = false;
 
-        OnLevelStarted();
-
         LevelManager levelManager = FindFirstObjectByType<LevelManager>();
         if (levelManager != null)
         {
             levelManager.NextLevel();
         }
+
+        OnLevelStarted();
     }
 
     public void OnMenuButtonPressed()
@@ -147,6 +150,7 @@ public class GameController : MonoBehaviour
         LevelManager lm = FindFirstObjectByType<LevelManager>();
         if (lm != null)
         {
+            ProgressManager.Instance.SaveCurrentLevel(lm.currentLevelIndex);
             lm.ClearLevel();
         }
 

@@ -36,7 +36,7 @@ public class LevelGenerator : MonoBehaviour
     (LevelData.BoardConfiguration, LevelData.BlockConfiguration[]) GenerateBoardAndBlocks()
     {
         LevelData.BoardConfiguration board = new LevelData.BoardConfiguration();
-        int actualWidth = Random.Range(6, 9);
+        int actualWidth = Random.Range(7, 9);
         int actualHeight = Random.Range(7, 10);
         boardWidth = actualWidth;
         boardHeight = actualHeight;

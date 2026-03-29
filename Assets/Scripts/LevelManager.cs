@@ -16,6 +16,9 @@ public class LevelManager : MonoBehaviour
     public BlockManager blockManager;
     public CameraController cameraController;
 
+    private LevelData cachedGeneratedLevel = null;
+    private int cachedGeneratedLevelIndex = -1;
+
     LevelData GetOrGenerateLevel(int levelIndex)
     {
         if (levelIndex < levels.Length)
@@ -25,7 +28,13 @@ public class LevelManager : MonoBehaviour
 
         if (useGeneratorAfterHandmadeLevels && levelGenerator != null)
         {
-            return levelGenerator.GenerateLevel();
+            // Генерируем новый уровень только если индекс изменился
+            if (cachedGeneratedLevel == null || cachedGeneratedLevelIndex != levelIndex)
+            {
+                cachedGeneratedLevel = levelGenerator.GenerateLevel();
+                cachedGeneratedLevelIndex = levelIndex;
+            }
+            return cachedGeneratedLevel;
         }
 
         return null;
@@ -62,6 +71,7 @@ public class LevelManager : MonoBehaviour
     public void NextLevel()
     {
         currentLevelIndex++;
+        cachedGeneratedLevel = null; // Сбрасываем кэш — новый уровень должен генерироваться заново
         ClearLevel();
         LoadLevel(currentLevelIndex);
     }

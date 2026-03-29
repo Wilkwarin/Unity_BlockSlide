@@ -30,11 +30,8 @@ public class Block
 
         for (int i = 0; i < shape.Length; i++)
         {
-            Vector3 pos = new Vector3(
-                position.x + shape[i].x,
-                position.y + shape[i].y,
-                0
-            );
+            Vector2Int currentCoord = shape[i];
+            Vector3 pos = new Vector3(position.x + currentCoord.x, position.y + currentCoord.y, 0);
 
             cellObjects[i] = GameObject.Instantiate(cellPrefab, pos, Quaternion.identity, parent);
             spriteRenderers[i] = cellObjects[i].GetComponent<SpriteRenderer>();
@@ -43,7 +40,52 @@ public class Block
             {
                 spriteRenderers[i].color = originalColor;
             }
+
+            bool hasT = false, hasB = false, hasL = false, hasR = false;
+            foreach (var coord in shape)
+            {
+                if (coord == currentCoord + Vector2Int.up) hasT = true;
+                if (coord == currentCoord + Vector2Int.down) hasB = true;
+                if (coord == currentCoord + Vector2Int.left) hasL = true;
+                if (coord == currentCoord + Vector2Int.right) hasR = true;
+            }
+
+            bool showT = !hasT;
+            bool showB = !hasB;
+            bool showL = !hasL;
+            bool showR = !hasR;
+
+            SetChildActive(cellObjects[i], "BorderTop", showT);
+            SetChildActive(cellObjects[i], "BorderBottom", showB);
+            SetChildActive(cellObjects[i], "BorderLeft", showL);
+            SetChildActive(cellObjects[i], "BorderRight", showR);
+
+            bool hasTL = false, hasTR = false, hasBL = false, hasBR = false;
+            foreach (var coord in shape)
+            {
+                if (coord == currentCoord + new Vector2Int(-1, 1)) hasTL = true;
+                if (coord == currentCoord + new Vector2Int(1, 1)) hasTR = true;
+                if (coord == currentCoord + new Vector2Int(-1, -1)) hasBL = true;
+                if (coord == currentCoord + new Vector2Int(1, -1)) hasBR = true;
+            }
+
+            SetChildActive(cellObjects[i], "CornerTL", hasT && hasL && !hasTL);
+            SetChildActive(cellObjects[i], "CornerTR", hasT && hasR && !hasTR);
+            SetChildActive(cellObjects[i], "CornerBL", hasB && hasL && !hasBL);
+            SetChildActive(cellObjects[i], "CornerBR", hasB && hasR && !hasBR);
         }
+    }
+
+    private void SetChildActive(GameObject parent, string childName, bool active)
+    {
+        Transform child = parent.transform.Find(childName);
+        if (child != null) child.gameObject.SetActive(active);
+    }
+
+    private void SetBorder(GameObject cell, string borderName, bool active)
+    {
+        Transform border = cell.transform.Find(borderName);
+        if (border != null) border.gameObject.SetActive(active);
     }
 
     public void MoveTo(Vector2Int newPosition)
