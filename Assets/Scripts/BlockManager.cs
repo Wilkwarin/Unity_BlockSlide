@@ -281,7 +281,7 @@ public class BlockManager : MonoBehaviour
         if (exitPos.x >= width) return Vector2.right;
         if (exitPos.x < 0) return Vector2.left;
 
-        return Vector2.up; // fallback
+        return Vector2.up;
     }
 
     bool CheckIfBlockFitsInExit(Block block, ExitOrientation exitOrientation, int exitSize, Vector2Int exitStartPosition)

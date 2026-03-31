@@ -22,30 +22,34 @@ public class LevelManager : MonoBehaviour
     LevelData GetOrGenerateLevel(int levelIndex)
     {
         if (levelIndex < levels.Length)
-        {
             return levels[levelIndex];
-        }
 
-        if (useGeneratorAfterHandmadeLevels && levelGenerator != null)
+        if (!useGeneratorAfterHandmadeLevels || levelGenerator == null)
+            return null;
+
+        if (cachedGeneratedLevel != null && cachedGeneratedLevelIndex == levelIndex)
+            return cachedGeneratedLevel;
+
+        LevelData saved = ProgressManager.Instance.LoadGeneratedLevel(levelIndex);
+        if (saved != null)
         {
-            // Генерируем новый уровень только если индекс изменился
-            if (cachedGeneratedLevel == null || cachedGeneratedLevelIndex != levelIndex)
-            {
-                cachedGeneratedLevel = levelGenerator.GenerateLevel();
-                cachedGeneratedLevelIndex = levelIndex;
-            }
+            cachedGeneratedLevel = saved;
+            cachedGeneratedLevelIndex = levelIndex;
+            Debug.Log($"Уровень {levelIndex} восстановлен из сохранения");
             return cachedGeneratedLevel;
         }
 
-        return null;
+        cachedGeneratedLevel = levelGenerator.GenerateLevel();
+        cachedGeneratedLevelIndex = levelIndex;
+        ProgressManager.Instance.SaveGeneratedLevel(levelIndex, cachedGeneratedLevel);
+
+        return cachedGeneratedLevel;
     }
 
     public void LoadLevel(int levelIndex)
     {
         if (levelIndex < 0)
-        {
             return;
-        }
 
         currentLevelIndex = levelIndex;
 
@@ -71,7 +75,8 @@ public class LevelManager : MonoBehaviour
     public void NextLevel()
     {
         currentLevelIndex++;
-        cachedGeneratedLevel = null; // Сбрасываем кэш — новый уровень должен генерироваться заново
+        cachedGeneratedLevel = null;
+        cachedGeneratedLevelIndex = -1;
         ClearLevel();
         LoadLevel(currentLevelIndex);
     }

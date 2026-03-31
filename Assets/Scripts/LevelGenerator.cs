@@ -70,7 +70,7 @@ public class LevelGenerator : MonoBehaviour
         int minFreeCells = totalCells / 4;
 
         int failedAttempts = 0;
-        int maxFailedAttempts = 10;
+        int maxFailedAttempts = 20;
 
         Dictionary<BlockColor, LevelData.ExitCellData> existingExitByColor = 
     new Dictionary<BlockColor, LevelData.ExitCellData>();
@@ -97,10 +97,19 @@ public class LevelGenerator : MonoBehaviour
                 BlockColor color = availableColors[colorIndex];
                 availableColors.RemoveAt(colorIndex);
 
+                bool placed = false;
+
+                if (existingExitByColor.ContainsKey(color))
+                {
+                    placed = TryPlaceBlockAtExistingExit(
+                        color, existingExitByColor[color],
+                        blocks, exits, occupiedCells, hasFiveBlockShape, unusedShapes);
+                }
+
+                if (!placed)
+                {
                 List<Wall> walls = new List<Wall> { Wall.Top, Wall.Bottom, Wall.Left, Wall.Right };
                 ShuffleList(walls);
-
-                bool placed = false;
 
                 foreach (Wall wall in walls)
                 {
@@ -157,6 +166,9 @@ public class LevelGenerator : MonoBehaviour
                         exits.Add(exitData);
                         blocks.Add(block);
 
+                        if (!existingExitByColor.ContainsKey(color))
+                            existingExitByColor[color] = exitData;
+
                         if (IsFiveBlockShape(chosenShape))
                             hasFiveBlockShape = true;
 
@@ -171,6 +183,7 @@ public class LevelGenerator : MonoBehaviour
 
                     if (wallPlaced)
                         break;
+                }
                 }
 
                 if (!placed)
@@ -191,7 +204,7 @@ public class LevelGenerator : MonoBehaviour
         }
 
         int targetOccupied = (totalCells * 3) / 4;
-        int maxFinalPasses = 10;
+        int maxFinalPasses = 30;
 
         for (int pass = 0; pass < maxFinalPasses; pass++)
         {
@@ -215,6 +228,16 @@ public class LevelGenerator : MonoBehaviour
             int colorIndex = Random.Range(0, availableColors.Count);
             BlockColor color = availableColors[colorIndex];
             availableColors.RemoveAt(colorIndex);
+
+            if (existingExitByColor.ContainsKey(color))
+            {
+                addedBlock = TryPlaceBlockAtExistingExit(
+                    color, existingExitByColor[color],
+                    blocks, exits, occupiedCells, hasFiveBlockShape, unusedShapes);
+            }
+
+            if (!addedBlock)
+            {
 
             List<Wall> walls = new List<Wall> { Wall.Top, Wall.Bottom, Wall.Left, Wall.Right };
             ShuffleList(walls);
@@ -284,14 +307,165 @@ public class LevelGenerator : MonoBehaviour
                 if (wallPlaced)
                     break;
             }
+            }
 
             if (!addedBlock)
                 availableColors.Add(color);
         }
 
         board.exits = exits.ToArray();
+        SettleAllDirections(blocks, exits, occupiedCells);
         PushBlocksAwayFromExits(blocks, exits, occupiedCells);
+
+        if (occupiedCells.Count < totalCells / 2)
+            return GenerateBoardAndBlocks();
+
         return (board, blocks.ToArray());
+
+        void SettleAllDirections(
+            List<LevelData.BlockConfiguration> blocks,
+            List<LevelData.ExitCellData> exits,
+            HashSet<Vector2Int> occupied)
+        {
+            Vector2Int[] directions = new Vector2Int[]
+            {
+                Vector2Int.right, Vector2Int.up, Vector2Int.left, Vector2Int.down
+            };
+
+            int rounds = 6;
+
+            for (int round = 0; round < rounds; round++)
+            {
+                foreach (Vector2Int dir in directions)
+                {
+                    for (int i = 0; i < blocks.Count; i++)
+                    {
+                        LevelData.BlockConfiguration block = blocks[i];
+                        Vector2Int[] coords = BlockShapeLibrary.GetShapeByEnum(block.shape);
+
+                        foreach (var offset in coords)
+                            occupied.Remove(block.startPosition + offset);
+
+                        Vector2Int pos = block.startPosition;
+
+                        while (true)
+                        {
+                            Vector2Int next = pos + dir;
+                            if (!IsWithinBoard(next, coords) || HasCollision(next, coords, occupied))
+                                break;
+                            pos = next;
+                        }
+
+                        block.startPosition = pos;
+                        blocks[i] = block;
+
+                        foreach (var offset in coords)
+                            occupied.Add(pos + offset);
+                    }
+                }
+            }
+        }
+
+        bool TryPlaceBlockAtExistingExit(
+            BlockColor color,
+            LevelData.ExitCellData existingExit,
+            List<LevelData.BlockConfiguration> blocks,
+            List<LevelData.ExitCellData> exits,
+            HashSet<Vector2Int> occupiedCells,
+            bool hasFiveBlockShape,
+            List<BlockShape> unusedShapes)
+        {
+            Wall wall = GetWallFromExitData(existingExit);
+
+            List<BlockShape> allShapes = new List<BlockShape>(
+                (BlockShape[])System.Enum.GetValues(typeof(BlockShape))
+            );
+
+            if (hasFiveBlockShape)
+                allShapes.RemoveAll(s => IsFiveBlockShape(s));
+
+            allShapes.RemoveAll(s =>
+            {
+                Vector2Int[] c = BlockShapeLibrary.GetShapeByEnum(s);
+                int span = (wall == Wall.Top || wall == Wall.Bottom)
+                    ? GetShapeSize(c).x
+                    : GetShapeSize(c).y;
+                return span > existingExit.size;
+            });
+
+            List<BlockShape> candidates = new List<BlockShape>();
+            foreach (var s in unusedShapes)
+                if (allShapes.Contains(s)) candidates.Add(s);
+            if (candidates.Count == 0)
+                candidates = allShapes;
+            if (candidates.Count == 0)
+                return false;
+
+            ShuffleList(candidates);
+
+            foreach (BlockShape chosenShape in candidates)
+            {
+                Vector2Int[] shapeCoords = BlockShapeLibrary.GetShapeByEnum(chosenShape);
+
+                int shapeSpan = (wall == Wall.Top || wall == Wall.Bottom)
+                    ? GetShapeSize(shapeCoords).x
+                    : GetShapeSize(shapeCoords).y;
+
+                int maxOffset = existingExit.size - shapeSpan;
+
+                List<int> offsets = new List<int>();
+                for (int o = 0; o <= maxOffset; o++) offsets.Add(o);
+                ShuffleList(offsets);
+
+                foreach (int offset in offsets)
+                {
+                    ExitCandidate fakeExit = new ExitCandidate
+                    {
+                        orientation = existingExit.orientation,
+                        size = existingExit.size
+                    };
+
+                    if (wall == Wall.Top || wall == Wall.Bottom)
+                        fakeExit.position = new Vector2Int(existingExit.position.x + offset, existingExit.position.y);
+                    else
+                        fakeExit.position = new Vector2Int(existingExit.position.x, existingExit.position.y + offset);
+
+                    Vector2Int startPos = GetPositionAtExit(fakeExit, shapeCoords);
+
+                    if (!IsWithinBoard(startPos, shapeCoords))
+                        continue;
+
+                    if (HasCollision(startPos, shapeCoords, occupiedCells))
+                        continue;
+
+                    Vector2Int finalPos = MoveIntoBoard(startPos, shapeCoords, wall, occupiedCells);
+
+                    LevelData.BlockConfiguration block = new LevelData.BlockConfiguration
+                    {
+                        color = color,
+                        shape = chosenShape,
+                        startPosition = finalPos
+                    };
+
+                    foreach (var off in shapeCoords)
+                        occupiedCells.Add(finalPos + off);
+
+                    exits.Add(existingExit);
+                    blocks.Add(block);
+
+                    if (IsFiveBlockShape(chosenShape))
+                        hasFiveBlockShape = true;
+
+                    unusedShapes.Remove(chosenShape);
+
+                    ShuffleExistingBlocks(blocks, exits, occupiedCells);
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         bool TryChooseShape(Wall wall, bool hasFiveBlockShape,
             List<BlockShape> unusedShapes,

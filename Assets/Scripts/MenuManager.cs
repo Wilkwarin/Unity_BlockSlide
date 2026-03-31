@@ -6,7 +6,8 @@ public class MenuManager : MonoBehaviour
     [Header("UI References")]
     public GameObject menuPanel;
     public TextMeshProUGUI continueButtonText;
-    public TextMeshProUGUI inGameLevelText; 
+    public TextMeshProUGUI inGameLevelText;
+    public GameObject inGameLevelRoot;
 
     [Header("References")]
     public LevelManager levelManager;
@@ -24,10 +25,10 @@ public class MenuManager : MonoBehaviour
             menuPanel.SetActive(true);
         }
 
-        if (inGameLevelText != null)
-        {
+        if (inGameLevelRoot != null)
+            inGameLevelRoot.SetActive(false);
+        else if (inGameLevelText != null)
             inGameLevelText.gameObject.SetActive(false);
-        }
 
         UpdateContinueButton();
     }
@@ -39,7 +40,12 @@ public class MenuManager : MonoBehaviour
             menuPanel.SetActive(false);
         }
 
-        if (inGameLevelText != null)
+        if (inGameLevelRoot != null)
+        {
+            inGameLevelRoot.SetActive(true);
+            RefreshLevelDisplay();
+        }
+        else if (inGameLevelText != null)
         {
             inGameLevelText.gameObject.SetActive(true);
             RefreshLevelDisplay();
@@ -76,12 +82,13 @@ public class MenuManager : MonoBehaviour
     public void OnContinueButtonPressed()
     {
         int currentLevel = ProgressManager.Instance.GetCurrentLevel();
-        HideMenu();
 
         if (levelManager != null)
         {
             levelManager.LoadLevel(currentLevel);
         }
+
+        HideMenu();
 
         GameController gc = FindFirstObjectByType<GameController>();
         if (gc != null)

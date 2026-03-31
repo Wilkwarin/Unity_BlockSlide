@@ -6,6 +6,7 @@ public class GameController : MonoBehaviour
 {
     [Header("Game References")]
     public BlockManager blockManager;
+    public ConfettiController confettiController;
 
     [Header("UI References")]
     public GameObject winPanel;
@@ -76,6 +77,9 @@ public class GameController : MonoBehaviour
         {
             ProgressManager.Instance.SaveCurrentLevel(levelManager.currentLevelIndex + 1);
         }
+
+        if (confettiController != null)
+            confettiController.Play();
 
         if (nextLevelButtonCanvas != null)
             nextLevelButtonCanvas.SetActive(false);
@@ -150,7 +154,6 @@ public class GameController : MonoBehaviour
         LevelManager lm = FindFirstObjectByType<LevelManager>();
         if (lm != null)
         {
-            ProgressManager.Instance.SaveCurrentLevel(lm.currentLevelIndex);
             lm.ClearLevel();
         }
 
