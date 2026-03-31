@@ -15,8 +15,15 @@ MonoBehaviour:
   levelNumber: 8
   levelName: Level 08
   board:
-    width: 0
-    height: 0
-    cells: 
-    exits: []
-  blocks: []
+    width: 3
+    height: 3
+    cells: 000000000000000000000000000000000000000000000000000000000000000000000000
+    exits:
+    - position: {x: 3, y: 1}
+      color: 2
+      orientation: 1
+      size: 2
+  blocks:
+  - color: 2
+    shape: 24
+    startPosition: {x: 0, y: 0}

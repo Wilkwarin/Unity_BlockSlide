@@ -134,6 +134,7 @@ public class GameController : MonoBehaviour
         if (levelManager != null)
         {
             levelManager.NextLevel();
+            ProgressManager.Instance.SaveCurrentLevel(levelManager.currentLevelIndex);
         }
 
         OnLevelStarted();

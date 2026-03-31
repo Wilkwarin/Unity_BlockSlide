@@ -721,7 +721,6 @@ public class LevelGenerator : MonoBehaviour
             List<LevelData.ExitCellData> exits,
             HashSet<Vector2Int> occupiedCells)
         {
-            // Перемешиваем порядок чтобы каждый раз разные фигуры двигались первыми
             List<int> indices = new List<int>();
             for (int i = 0; i < blocks.Count; i++)
                 indices.Add(i);
@@ -736,17 +735,13 @@ public class LevelGenerator : MonoBehaviour
                 Wall wall = GetWallFromExitData(exit);
                 Vector2Int inwardDir = GetInwardDirection(wall);
 
-                // Временно убираем клетки этого блока из занятых
                 foreach (var offset in coords)
                     occupiedCells.Remove(block.startPosition + offset);
 
-                // Пробуем переместить фигуру в случайном направлении
-                // но не в сторону выхода
                 Vector2Int pos = block.startPosition;
                 int maxSteps = boardWidth * boardHeight;
                 int totalSteps = 0;
 
-                // Выбираем случайное направление не к выходу
                 Vector2Int moveDir = GetRandomDirection(inwardDir, -inwardDir);
 
                 int stepsInDir = Random.Range(1, Mathf.Max(boardWidth, boardHeight));
@@ -771,7 +766,6 @@ public class LevelGenerator : MonoBehaviour
                 block.startPosition = pos;
                 blocks[i] = block;
 
-                // Возвращаем клетки на новой позиции
                 foreach (var offset in coords)
                     occupiedCells.Add(pos + offset);
             }
@@ -865,7 +859,6 @@ public class LevelGenerator : MonoBehaviour
                     Vector2Int inwardDir = GetInwardDirection(wall);
                     Vector2Int perpDir = GetRandomPerpendicularDirection(inwardDir);
 
-                    // Временно убираем клетки этого блока
                     foreach (var offset in coords)
                         occupiedCells.Remove(block.startPosition + offset);
 
@@ -873,12 +866,10 @@ public class LevelGenerator : MonoBehaviour
                     int totalSteps = 0;
                     int maxSteps = boardWidth * boardHeight;
 
-                    // Несколько попыток обхода препятствий
                     int maneuvers = 4;
 
                     for (int maneuver = 0; maneuver < maneuvers && totalSteps < maxSteps; maneuver++)
                     {
-                        // Шаг 1 — идём вглубь пока можем
                         bool movedInward = false;
                         for (int step = 0; step < maxSteps && totalSteps < maxSteps; step++)
                         {
@@ -896,13 +887,10 @@ public class LevelGenerator : MonoBehaviour
                             }
                         }
 
-                        // Шаг 2 — упёрлись, пробуем сдвинуться в сторону
-                        // Пробуем обе перпендикулярных стороны в случайном порядке
                         List<Vector2Int> perpDirs = new List<Vector2Int>
                 {
                     GetRandomPerpendicularDirection(inwardDir),
                 };
-                        // Добавляем противоположное перпендикулярное направление
                         Vector2Int firstPerp = perpDirs[0];
                         perpDirs.Add(new Vector2Int(-firstPerp.x, -firstPerp.y));
 
@@ -930,7 +918,6 @@ public class LevelGenerator : MonoBehaviour
                                 break;
                         }
 
-                        // Если не смогли двигаться ни вглубь ни в сторону — фигура заперта
                         if (!movedInward && !movedSideways)
                             break;
                     }

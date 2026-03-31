@@ -37,16 +37,24 @@ public class BlockManager : MonoBehaviour
         bool touchEnded = false;
         bool isDragging_Active = false;
 
-        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        if (Touchscreen.current != null && Touchscreen.current.touches.Count > 0)
         {
-            inputPosition = Touchscreen.current.primaryTouch.position.ReadValue();
-            isDragging_Active = true;
+            var primaryTouch = Touchscreen.current.primaryTouch;
 
-            if (Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
-                touchStarted = true;
+            if (primaryTouch.press.isPressed)
+            {
+                inputPosition = primaryTouch.position.ReadValue();
+                isDragging_Active = true;
 
-            if (Touchscreen.current.primaryTouch.press.wasReleasedThisFrame)
+                if (primaryTouch.press.wasPressedThisFrame)
+                    touchStarted = true;
+            }
+
+            if (primaryTouch.press.wasReleasedThisFrame)
+            {
+                inputPosition = primaryTouch.position.ReadValue();
                 touchEnded = true;
+            }
         }
         else if (Mouse.current != null)
         {
@@ -281,7 +289,7 @@ public class BlockManager : MonoBehaviour
         if (exitPos.x >= width) return Vector2.right;
         if (exitPos.x < 0) return Vector2.left;
 
-        return Vector2.up;
+        return Vector2.up; // fallback
     }
 
     bool CheckIfBlockFitsInExit(Block block, ExitOrientation exitOrientation, int exitSize, Vector2Int exitStartPosition)
